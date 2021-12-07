@@ -13,8 +13,8 @@ def parse_args():
     parser.add_argument(
         "--input-file",
         default="./Jazz_Edges.npy",
-        help="Path to input graph file. Format is a list of node pairs, "
-        "where nodes are integers in [0, n-1].",
+        help="Path to input edgelist .npy file. Format is a list of node "
+        "pairs, where nodes are integers in [0, n-1].",
     )
 
     parser.add_argument(
@@ -91,7 +91,7 @@ min_target_items = args.min_target_items
 plot_error = args.plot_error
 igraph = args.igraph
 
-graph = np.load(args.input_file)
+edgelist = np.load(args.input_file)
 
 print("Starting")
 # Because I couldn't find a general 'flatten' in Python.
@@ -106,14 +106,14 @@ if min_target_items == "none":
     elif reduction_target == "edges" and action_switch == "both":
         min_target_items = 1
     elif reduction_target == "edges" and action_switch == "delete":
-        min_target_items = len(set(flatten(graph)))
+        min_target_items = len(set(flatten(edgelist)))
 
 # In case the graph becomes disconnected, try again.
 connected = False
 while not connected:
     print("Initializing GLGraph")
     g = GLGraph(
-        graph,
+        edgelist,
         edgeWeights="none",
         nodeWeights="none",
         plot_error=plot_error,
