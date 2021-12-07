@@ -15,7 +15,7 @@ class GLGraph(object):
         edges,
         edgeWeights="none",
         nodeWeights="none",
-        plotError=False,
+        plot_error=False,
         layout="random",
     ):
         if diagnosticSwitch > 0:
@@ -97,7 +97,7 @@ class GLGraph(object):
             self.nodeWeightedLaplacianIn, self.jMat
         )
         self.nodeWeightedInverseLaplacian = np.copy(self.nodeWeightedInverseLaplacianIn)
-        if not plotError:
+        if not plot_error:
             self.eigenvaluesIn = np.zeros(len(self.nodeWeightedLaplacianIn))
             self.eigenvectorsIn = np.zeros(np.shape(self.nodeWeightedLaplacianIn))
         else:
@@ -187,21 +187,21 @@ class GLGraph(object):
             )
         return distanceListOut
 
-    def make_wOmega_m_tau(self, method="random", numSamples="all"):
+    def make_wOmega_m_tau(self, method="random", num_samples=0):
         startTime = time.time()
         if method == "random":
-            if numSamples == "all":
+            if num_samples == 0:
                 edgesToSample = range(len(self.edgeWeightList))
-            elif numSamples >= len(self.edgeWeightList):
+            elif num_samples >= len(self.edgeWeightList):
                 edgesToSample = range(len(self.edgeWeightList))
             else:
                 edgesToSample = sorted(
                     np.random.choice(
-                        len(self.edgeWeightList), numSamples, replace=False
+                        len(self.edgeWeightList), num_samples, replace=False
                     )
                 )
         elif method == "RM":
-            edgesToSample = self.get_edgeList_proposal_RM(numSamples)
+            edgesToSample = self.get_edgeList_proposal_RM(num_samples)
         effectiveResistanceOut = np.zeros(len(edgesToSample))
         edgeImportanceOut = np.zeros(len(edgesToSample))
         numTrianglesOut = np.zeros(len(edgesToSample))
@@ -251,18 +251,18 @@ class GLGraph(object):
         mIn,
         tauIn,
         pMin=0.125,
-        reductionType="both",
-        reductionTarget="edges",
+        reduction_type="both",
+        reduction_target="edges",
         maxReweightFactor=0,
     ):
         startTime = time.time()
-        if reductionType == "delete" and reductionTarget == "nodes":
+        if reduction_type == "delete" and reduction_target == "nodes":
             print("Cannot do deletion only when targeting reduction of nodes")
             return
         if wOmegaIn < -1.0e-12 or wOmegaIn > 1.0 + 1.0e-12:
             print("ERROR IN WR")
-        if reductionTarget == "edges":
-            if reductionType == "delete":
+        if reduction_target == "edges":
+            if reduction_type == "delete":
                 if wOmegaIn > 1.0 - 10e-6:
                     return [0.0, [0.0, 0.0, 1.0, 1.0]]
                 minBetaStarTemp = mIn / (1 - wOmegaIn) / (1 - pMin)
@@ -288,7 +288,7 @@ class GLGraph(object):
                     reweightProbTemp,
                     reweightFactorTemp,
                 ]
-            elif reductionType == "contract":
+            elif reduction_type == "contract":
                 minBetaStarTemp = mIn / wOmegaIn / (1.0 - pMin) / (1.0 + tauIn) ** 0.5
                 deletionProbTemp = 0.0
                 contractionProbTemp = pMin
@@ -308,7 +308,7 @@ class GLGraph(object):
                     reweightProbTemp,
                     reweightFactorTemp,
                 ]
-            elif reductionType == "both":
+            elif reduction_type == "both":
                 if wOmegaIn > 1.0 - 10e-14:
                     minBetaStarTemp = (
                         mIn / wOmegaIn / (1.0 - pMin) / (1.0 + tauIn) ** 0.5
@@ -388,7 +388,7 @@ class GLGraph(object):
                         reweightFactorTemp,
                     ]
 
-        if reductionTarget == "nodes":
+        if reduction_target == "nodes":
             minBetaStarTemp = mIn / wOmegaIn / (1.0 - pMin)
             deletionProbTemp = 0.0
             contractionProbTemp = pMin
@@ -418,8 +418,8 @@ class GLGraph(object):
         mListIn,
         tauListIn,
         pMin=0.125,
-        reductionType="both",
-        reductionTarget="edges",
+        reduction_type="both",
+        reduction_target="edges",
         maxReweightFactor=0,
     ):
         startTime = time.time()
@@ -431,8 +431,8 @@ class GLGraph(object):
                 mListIn[index],
                 tauListIn[index],
                 pMin=pMin,
-                reductionType=reductionType,
-                reductionTarget=reductionTarget,
+                reduction_type=reduction_type,
+                reduction_target=reduction_target,
                 maxReweightFactor=maxReweightFactor,
             )
             minBetaStarListOut[index] = minBetaStarTemp
@@ -444,10 +444,10 @@ class GLGraph(object):
 
     def reduce_graph_single_edge(
         self,
-        numSamples=1,
+        num_samples=1,
         pMin=0.125,
-        reductionType="both",
-        reductionTarget="edges",
+        reduction_type="both",
+        reduction_target="edges",
         maxReweightFactor=0,
     ):
         startTime = time.time()
@@ -458,7 +458,7 @@ class GLGraph(object):
             sampledWOmegaList,
             sampledMList,
             sampledTauList,
-        ) = self.make_wOmega_m_tau(method="random", numSamples=numSamples)
+        ) = self.make_wOmega_m_tau(method="random", num_samples=num_samples)
         (
             sampledMinBetaStarList,
             sampledActionProbReweightList,
@@ -467,8 +467,8 @@ class GLGraph(object):
             sampledMList,
             sampledTauList,
             pMin=pMin,
-            reductionType=reductionType,
-            reductionTarget=reductionTarget,
+            reduction_type=reduction_type,
+            reduction_target=reduction_target,
             maxReweightFactor=maxReweightFactor,
         )
         nonzeroIndices = [
@@ -686,17 +686,17 @@ class GLGraph(object):
         if diagnosticSwitch > 1:
             print("update_inverse_laplacian, ", endTime - startTime)
 
-    def get_edgeList_proposal_RM(self, numSamplesIn="all"):
+    def get_edgeList_proposal_RM(self, num_samples_in=0):
         adjacencyTemp = self.adjacency
         edgeListTemp = list([list(item) for item in self.edgeList])
         randomNodeOrderTemp = np.random.permutation(len(adjacencyTemp))
         nodePairsOut = []
         matchedNodesTemp = []
 
-        if numSamplesIn == "all":
-            numSamples = len(self.edgeList)
+        if num_samples_in == 0:
+            num_samples = len(self.edgeList)
         else:
-            numSamples = numSamplesIn
+            num_samples = num_samples_in
 
         for firstNode in randomNodeOrderTemp:
             if firstNode not in matchedNodesTemp:
@@ -710,7 +710,7 @@ class GLGraph(object):
                     nodePairsOut.append(sorted([firstNode, secondNode]))
                     matchedNodesTemp.append(firstNode)
                     matchedNodesTemp.append(secondNode)
-            if len(nodePairsOut) >= numSamples:
+            if len(nodePairsOut) >= num_samples:
                 break
 
         proposedEdgeListOut = [edgeListTemp.index(item) for item in nodePairsOut]
@@ -718,11 +718,11 @@ class GLGraph(object):
 
     def reduce_graph_multi_edge(
         self,
-        numSamples="all",
+        num_samples=0,
         qFraction=0.0625,
         pMin=0.125,
-        reductionType="both",
-        reductionTarget="edges",
+        reduction_type="both",
+        reduction_target="edges",
         maxReweightFactor=0,
     ):
         if not self.updatedInverses:
@@ -732,7 +732,7 @@ class GLGraph(object):
             sampledWOmegaList,
             sampledMList,
             sampledTauList,
-        ) = self.make_wOmega_m_tau(method="RM", numSamples=numSamples)
+        ) = self.make_wOmega_m_tau(method="RM", num_samples=num_samples)
         (
             sampledMinBetaStarList,
             sampledActionProbReweightList,
@@ -741,8 +741,8 @@ class GLGraph(object):
             sampledMList,
             sampledTauList,
             pMin=pMin,
-            reductionType=reductionType,
-            reductionTarget=reductionTarget,
+            reduction_type=reduction_type,
+            reduction_target=reduction_target,
             maxReweightFactor=maxReweightFactor,
         )
         nonzeroIndices = [
