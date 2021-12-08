@@ -117,8 +117,8 @@ def main(args):
         print("Initializing GLGraph")
         g = GLGraph(
             edgelist,
-            edgeWeights="none",
-            nodeWeights="none",
+            edge_weights="none",
+            node_weights="none",
             plot_error=plot_error,
             layout="random",
         )
@@ -224,7 +224,7 @@ def main(args):
     g.update_inverse_laplacian()
 
     # This is the reduced node-weighted laplacian of size $\tilde{V} \times \tilde{V}$
-    reducedLaplacian = g.nodeWeightedInverseLaplacian
+    reducedLaplacian = g.node_weighted_inv_lap
 
     # This is the reduced node-weighted laplacian appropriately projected back to
     # $V \times V$. Use this to get approximate solutions to your Lx=b problems.

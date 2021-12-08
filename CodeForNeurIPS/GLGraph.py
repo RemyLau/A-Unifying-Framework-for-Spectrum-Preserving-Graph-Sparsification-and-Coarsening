@@ -12,8 +12,8 @@ class GLGraph(object):
     def __init__(
         self,
         edges,
-        edgeWeights="none",
-        nodeWeights="none",
+        edge_weights="none",
+        node_weights="none",
         plot_error=False,
         layout="random",
     ):
@@ -24,35 +24,35 @@ class GLGraph(object):
         self.edges_in = np.array(edges)
         self.nodes_in = sorted(list(set(flatten(self.edges_in))))
 
-        if len(np.shape(edgeWeights)) == 0:
-            self.edgeWeightsIn = np.ones(len(self.edges_in))
+        if len(np.shape(edge_weights)) == 0:
+            self.edge_weights_in = np.ones(len(self.edges_in))
         else:
-            self.edgeWeightsIn = np.array(edgeWeights)
+            self.edge_weights_in = np.array(edge_weights)
 
-        if len(np.shape(nodeWeights)) == 0:
-            self.nodeWeightsIn = np.ones(len(self.nodes_in))
+        if len(np.shape(node_weights)) == 0:
+            self.node_weights_in = np.ones(len(self.nodes_in))
         else:
-            self.nodeWeightsIn = np.array(nodeWeights)
+            self.node_weights_in = np.array(node_weights)
 
         # setting up the reduced graph
         self.edges = np.copy(self.edges_in)
         self.nodes = np.copy(self.nodes_in)
-        self.edgeWeightList = np.copy(self.edgeWeightsIn)
-        self.nodeWeightList = np.copy(self.nodeWeightsIn)
-        self.nodeWeightListOld = np.copy(self.nodeWeightsIn)
+        self.edge_weight_list = np.copy(self.edge_weights_in)
+        self.node_weight_list = np.copy(self.node_weights_in)
+        self.node_weight_list_old = np.copy(self.node_weights_in)
 
         # making matrices
         if diagnosticSwitch > 0:
             print("making matrices")
         self.adjacency = self.make_adjacency(
-            self.edges_in, self.nodes_in, self.edgeWeightsIn
+            self.edges_in, self.nodes_in, self.edge_weights_in
         )
         self.laplacian = self.adjacency_to_laplacian(self.adjacency)
-        self.nodeWeightedLaplacianIn = (((self.laplacian).T) / self.nodeWeightsIn).T
-        self.nodeWeightedLaplacian = np.copy(self.nodeWeightedLaplacianIn)
+        self.node_weighted_lap_in = (((self.laplacian).T) / self.node_weights_in).T
+        self.node_weighted_lap = np.copy(self.node_weighted_lap_in)
         self.jMatIn = np.outer(
-            np.ones(len(self.nodeWeightsIn)), self.nodeWeightsIn
-        ) / np.sum(self.nodeWeightsIn)
+            np.ones(len(self.node_weights_in)), self.node_weights_in
+        ) / np.sum(self.node_weights_in)
         self.jMat = np.copy(self.jMatIn)
         self.contractedNodesToNodes = np.identity(len(self.nodes_in))
 
@@ -92,23 +92,23 @@ class GLGraph(object):
         # computing the inverse and initial eigenvectors
         if diagnosticSwitch > 0:
             print("making inverses")
-        self.nodeWeightedInverseLaplacianIn = self.invert_laplacian(
-            self.nodeWeightedLaplacianIn, self.jMat
+        self.node_weighted_inv_lap_in = self.invert_laplacian(
+            self.node_weighted_lap_in, self.jMat
         )
-        self.nodeWeightedInverseLaplacian = np.copy(self.nodeWeightedInverseLaplacianIn)
+        self.node_weighted_inv_lap = np.copy(self.node_weighted_inv_lap_in)
         if not plot_error:
-            self.eigenvaluesIn = np.zeros(len(self.nodeWeightedLaplacianIn))
-            self.eigenvectorsIn = np.zeros(np.shape(self.nodeWeightedLaplacianIn))
+            self.eigenvaluesIn = np.zeros(len(self.node_weighted_lap_in))
+            self.eigenvectorsIn = np.zeros(np.shape(self.node_weighted_lap_in))
         else:
             eigenvaluesTemp, eigenvectorsTemp = np.linalg.eig(
-                self.nodeWeightedLaplacianIn
+                self.node_weighted_lap_in
             )
             orderTemp = np.argsort(eigenvaluesTemp)
             self.eigenvaluesIn = eigenvaluesTemp[orderTemp]
             self.eigenvectorsIn = eigenvectorsTemp.T[orderTemp]
         self.originalEigenvectorOutput = np.array(
             [
-                np.dot(self.nodeWeightedInverseLaplacianIn, eigVec)
+                np.dot(self.node_weighted_inv_lap_in, eigVec)
                 for eigVec in self.eigenvectorsIn
             ]
         )
@@ -121,23 +121,23 @@ class GLGraph(object):
             print("__init__: ", endTime - startTime)
 
     def make_adjacency(
-        self, edges_in, nodes_in=["none"], edgeWeightListIn=["none"]
+        self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]
     ):
         if np.any([item == "none" for item in nodes_in]):
             nodeListTemp = sorted(list(set(flatten(edges_in))))
         else:
             nodeListTemp = np.array(nodes_in)
-        if np.any([item == "none" for item in edgeWeightListIn]):
-            edgeWeightListTemp = np.ones(len(edges_in))
+        if np.any([item == "none" for item in edge_weight_list_in]):
+            edge_weight_list_temp = np.ones(len(edges_in))
         else:
-            edgeWeightListTemp = np.array(edgeWeightListIn)
+            edge_weight_list_temp = np.array(edge_weight_list_in)
 
         adjOut = np.zeros((len(nodeListTemp), len(nodeListTemp)))
         for index, edge in enumerate(edges_in):
             position0 = list(nodeListTemp).index(edge[0])
             position1 = list(nodeListTemp).index(edge[1])
-            adjOut[position0, position1] += edgeWeightListTemp[index]
-            adjOut[position1, position0] += edgeWeightListTemp[index]
+            adjOut[position0, position1] += edge_weight_list_temp[index]
+            adjOut[position1, position0] += edge_weight_list_temp[index]
         return adjOut
 
     def adjacency_to_laplacian(self, adjIn):
@@ -165,7 +165,7 @@ class GLGraph(object):
             np.dot(
                 matIn,
                 np.dot(
-                    np.diag(1.0 / self.nodeWeightList), self.contractedNodesToNodes.T
+                    np.diag(1.0 / self.node_weight_list), self.contractedNodesToNodes.T
                 ),
             ),
         )
@@ -175,7 +175,7 @@ class GLGraph(object):
             self.update_inverse_laplacian()
         distanceListOut = np.zeros(len(self.originalEigenvectorOutput))
         projectedNodeWeightedInverseLaplacian = self.project_reduced_to_original(
-            self.nodeWeightedInverseLaplacian
+            self.node_weighted_inv_lap
         )
         for index in range(len(self.originalEigenvectorOutput)):
             distanceListOut[index] = self.hyperbolic_distance(
@@ -190,13 +190,13 @@ class GLGraph(object):
         startTime = time.time()
         if method == "random":
             if num_samples == 0:
-                edgesToSample = range(len(self.edgeWeightList))
-            elif num_samples >= len(self.edgeWeightList):
-                edgesToSample = range(len(self.edgeWeightList))
+                edgesToSample = range(len(self.edge_weight_list))
+            elif num_samples >= len(self.edge_weight_list):
+                edgesToSample = range(len(self.edge_weight_list))
             else:
                 edgesToSample = sorted(
                     np.random.choice(
-                        len(self.edgeWeightList), num_samples, replace=False
+                        len(self.edge_weight_list), num_samples, replace=False
                     )
                 )
         elif method == "RM":
@@ -209,14 +209,14 @@ class GLGraph(object):
             vertex0 = self.edges[edgeNum][0]
             vertex1 = self.edges[edgeNum][1]
             invDotUTemp = (
-                self.nodeWeightedInverseLaplacian[:, vertex0]
-                / self.nodeWeightList[vertex0]
-                - self.nodeWeightedInverseLaplacian[:, vertex1]
-                / self.nodeWeightList[vertex1]
+                self.node_weighted_inv_lap[:, vertex0]
+                / self.node_weight_list[vertex0]
+                - self.node_weighted_inv_lap[:, vertex1]
+                / self.node_weight_list[vertex1]
             )
             vTempDotInv = (
-                self.nodeWeightedInverseLaplacian[vertex0]
-                - self.nodeWeightedInverseLaplacian[vertex1]
+                self.node_weighted_inv_lap[vertex0]
+                - self.node_weighted_inv_lap[vertex1]
             )
             effectiveResistanceOut[index] = invDotUTemp[vertex0] - invDotUTemp[vertex1]
             edgeImportanceOut[index] = np.dot(invDotUTemp, vTempDotInv)
@@ -239,8 +239,8 @@ class GLGraph(object):
             print("make_wOmega_m_tau: ", endTime - startTime)
         return [
             edgesToSample,
-            effectiveResistanceOut * self.edgeWeightList[edgesToSample],
-            edgeImportanceOut * self.edgeWeightList[edgesToSample],
+            effectiveResistanceOut * self.edge_weight_list[edgesToSample],
+            edgeImportanceOut * self.edge_weight_list[edgesToSample],
             numTrianglesOut,
         ]
 
@@ -510,14 +510,14 @@ class GLGraph(object):
 
     def delete_edge(self, edgeIndexIn):
         startTime = time.time()
-        changeTemp = -1.0 * self.edgeWeightList[edgeIndexIn]
+        changeTemp = -1.0 * self.edge_weight_list[edgeIndexIn]
         nodesTemp = self.edges[edgeIndexIn]
         self.adjacency[nodesTemp[0], nodesTemp[1]] = 0.0
         self.adjacency[nodesTemp[1], nodesTemp[0]] = 0.0
         self.laplacian = self.adjacency_to_laplacian(self.adjacency)
-        self.nodeWeightedLaplacian = (((self.laplacian).T) / self.nodeWeightList).T
+        self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
         self.edges = np.delete(self.edges, edgeIndexIn, 0)
-        self.edgeWeightList = np.delete(self.edgeWeightList, edgeIndexIn, 0)
+        self.edge_weight_list = np.delete(self.edge_weight_list, edgeIndexIn, 0)
 
         self.updatedInverses = False
         (self.updateList).append([nodesTemp, 1.0 / changeTemp])
@@ -527,13 +527,13 @@ class GLGraph(object):
 
     def reweight_edge(self, edgeIndexIn, reweightFactorIn):
         startTime = time.time()
-        changeTemp = (reweightFactorIn - 1.0) * self.edgeWeightList[edgeIndexIn]
+        changeTemp = (reweightFactorIn - 1.0) * self.edge_weight_list[edgeIndexIn]
         nodesTemp = self.edges[edgeIndexIn]
         self.adjacency[nodesTemp[0], nodesTemp[1]] += changeTemp
         self.adjacency[nodesTemp[1], nodesTemp[0]] += changeTemp
         self.laplacian = self.adjacency_to_laplacian(self.adjacency)
-        self.nodeWeightedLaplacian = (((self.laplacian).T) / self.nodeWeightList).T
-        self.edgeWeightList[edgeIndexIn] += changeTemp
+        self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
+        self.edge_weight_list[edgeIndexIn] += changeTemp
 
         self.updatedInverses = False
         (self.updateList).append([nodesTemp, 1.0 / changeTemp])
@@ -547,21 +547,21 @@ class GLGraph(object):
             int(self.edges[int(edgeIndexIn), 0]),
             int(self.edges[int(edgeIndexIn), 1]),
         ]
-        edgeWeightToContract = self.edgeWeightList[edgeIndexIn]
+        edge_weight_to_contract = self.edge_weight_list[edgeIndexIn]
         layoutTemp = self.layout
         tempElementLayoutTemp = np.array(
             [
                 (
                     layoutTemp[nodesToContract[0]][index]
-                    * self.nodeWeightList[nodesToContract[0]]
+                    * self.node_weight_list[nodesToContract[0]]
                     + layoutTemp[nodesToContract[1]][index]
-                    * self.nodeWeightList[nodesToContract[1]]
+                    * self.node_weight_list[nodesToContract[1]]
                 )
                 for index in range(len(layoutTemp[nodesToContract[0]]))
             ]
         ) / (
-            self.nodeWeightList[nodesToContract[0]]
-            + self.nodeWeightList[nodesToContract[1]]
+            self.node_weight_list[nodesToContract[0]]
+            + self.node_weight_list[nodesToContract[1]]
         )
         layoutTemp[nodesToContract[0]] = tuple(tempElementLayoutTemp)
         if nodesToContract[1] == 0:
@@ -577,7 +577,7 @@ class GLGraph(object):
             )
         self.layout = layoutTemp
 
-        # self.nodeWeightListOld = np.copy(self.nodeWeightList)
+        # self.node_weight_list_old = np.copy(self.node_weight_list)
 
         self.contractedNodesToNodes[
             :, nodesToContract[0]
@@ -587,7 +587,7 @@ class GLGraph(object):
         ).T
 
         self.nodes = np.delete(self.nodes, nodesToContract[1], 0)
-        self.nodeWeightList = np.dot(self.contractedNodesToNodes.T, self.nodeWeightsIn)
+        self.node_weight_list = np.dot(self.contractedNodesToNodes.T, self.node_weights_in)
 
         self.adjacency[nodesToContract[0], nodesToContract[1]] = 0.0
         self.adjacency[nodesToContract[1], nodesToContract[0]] = 0.0
@@ -597,18 +597,18 @@ class GLGraph(object):
         self.adjacency = (np.delete(self.adjacency.T, nodesToContract[1], 0)).T
 
         edgeListTemp = []
-        edgeWeightListTemp = []
+        edge_weight_list_temp = []
         for i in range(len(self.adjacency)):
             for j in range(i, len(self.adjacency)):
                 if self.adjacency[i, j] > 0:
                     edgeListTemp.append([i, j])
-                    edgeWeightListTemp.append(self.adjacency[i, j])
+                    edge_weight_list_temp.append(self.adjacency[i, j])
 
         self.edges = np.array(edgeListTemp)
-        self.edgeWeightList = np.array(edgeWeightListTemp)
+        self.edge_weight_list = np.array(edge_weight_list_temp)
 
         self.laplacian = self.adjacency_to_laplacian(self.adjacency)
-        self.nodeWeightedLaplacian = (((self.laplacian).T) / self.nodeWeightList).T
+        self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
 
         self.updatedInverses = False
         (self.updateList).append([nodesToContract, 0.0])
@@ -631,18 +631,18 @@ class GLGraph(object):
 
         incidenceTemp = np.array(
             [
-                self.make_incidence_row(len(self.nodeWeightListOld), edge)
+                self.make_incidence_row(len(self.node_weight_list_old), edge)
                 for edge in edgesToChange
             ]
         )
 
-        uTemp = (incidenceTemp / self.nodeWeightListOld).T
+        uTemp = (incidenceTemp / self.node_weight_list_old).T
         vTemp = incidenceTemp
 
         try:
             easierInverse = np.linalg.inv(
                 np.diag(inverseChange)
-                + np.dot(vTemp, np.dot(self.nodeWeightedInverseLaplacian, uTemp))
+                + np.dot(vTemp, np.dot(self.node_weighted_inv_lap, uTemp))
             )
         except np.linalg.LinAlgError as err:
             if "Singular matrix" in str(err):
@@ -654,32 +654,32 @@ class GLGraph(object):
 
         if np.shape(easierInverse) == (1, 1):
             invLapUpdate = -easierInverse[0, 0] * np.outer(
-                np.dot(self.nodeWeightedInverseLaplacian, uTemp),
-                np.dot(vTemp, self.nodeWeightedInverseLaplacian),
+                np.dot(self.node_weighted_inv_lap, uTemp),
+                np.dot(vTemp, self.node_weighted_inv_lap),
             )
         else:
             invLapUpdate = -np.dot(
-                np.dot(np.dot(self.nodeWeightedInverseLaplacian, uTemp), easierInverse),
-                np.dot(vTemp, self.nodeWeightedInverseLaplacian),
+                np.dot(np.dot(self.node_weighted_inv_lap, uTemp), easierInverse),
+                np.dot(vTemp, self.node_weighted_inv_lap),
             )
 
-        self.nodeWeightedInverseLaplacian += invLapUpdate
+        self.node_weighted_inv_lap += invLapUpdate
         if len(self.rowsToDelete) > 0:
             for rowToDelete in self.rowsToDelete:
-                self.nodeWeightedInverseLaplacian[
+                self.node_weighted_inv_lap[
                     :, rowToDelete[0]
-                ] += self.nodeWeightedInverseLaplacian[:, rowToDelete[1]]
-                self.nodeWeightedInverseLaplacian = np.delete(
-                    self.nodeWeightedInverseLaplacian, rowToDelete[1], 0
+                ] += self.node_weighted_inv_lap[:, rowToDelete[1]]
+                self.node_weighted_inv_lap = np.delete(
+                    self.node_weighted_inv_lap, rowToDelete[1], 0
                 )
-                self.nodeWeightedInverseLaplacian = (
-                    np.delete(self.nodeWeightedInverseLaplacian.T, rowToDelete[1], 0)
+                self.node_weighted_inv_lap = (
+                    np.delete(self.node_weighted_inv_lap.T, rowToDelete[1], 0)
                 ).T
 
         self.updatedInverses = True
         self.updateList = []
         self.rowsToDelete = []
-        self.nodeWeightListOld = np.copy(self.nodeWeightList)
+        self.node_weight_list_old = np.copy(self.node_weight_list)
 
         endTime = time.time()
         if diagnosticSwitch > 1:
@@ -806,7 +806,7 @@ class GLGraph(object):
                 for edgeToContract in edgesToContract
             ]
 
-        # self.nodeWeightListOld = np.copy(self.nodeWeightList)
+        # self.node_weight_list_old = np.copy(self.node_weight_list)
         self.delete_multiple_edges(edgesToDelete)
         if contractSwitch:
             self.contract_multiple_edges(shiftedEdgesToContract)
@@ -814,16 +814,16 @@ class GLGraph(object):
     def delete_multiple_edges(self, edgeIndexListIn):
         startTime = time.time()
         for edgeIndex in edgeIndexListIn:
-            changeTemp = -1.0 * self.edgeWeightList[edgeIndex]
+            changeTemp = -1.0 * self.edge_weight_list[edgeIndex]
             nodesTemp = self.edges[edgeIndex]
             self.adjacency[nodesTemp[0], nodesTemp[1]] = 0.0
             self.adjacency[nodesTemp[1], nodesTemp[0]] = 0.0
             (self.updateList).append([nodesTemp, 1.0 / changeTemp])
 
         self.laplacian = self.adjacency_to_laplacian(self.adjacency)
-        self.nodeWeightedLaplacian = (((self.laplacian).T) / self.nodeWeightList).T
+        self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
         self.edges = np.delete(self.edges, edgeIndexListIn, 0)
-        self.edgeWeightList = np.delete(self.edgeWeightList, edgeIndexListIn, 0)
+        self.edge_weight_list = np.delete(self.edge_weight_list, edgeIndexListIn, 0)
 
         self.updatedInverses = False
         endTime = time.time()
@@ -848,11 +848,11 @@ class GLGraph(object):
         sortedNodesToContract = [nodesToContract[index] for index in edgeSortingArgs]
         sortedEdgesToContract = [edgeIndexListIn[index] for index in edgeSortingArgs]
 
-        edgeWeightListTemp = np.array(
-            [self.edgeWeightList[int(edge)] for edge in edgeIndexListIn]
+        edge_weight_list_temp = np.array(
+            [self.edge_weight_list[int(edge)] for edge in edgeIndexListIn]
         )
         sortedEdgeWeightListTemp = [
-            edgeWeightListTemp[index] for index in edgeSortingArgs
+            edge_weight_list_temp[index] for index in edgeSortingArgs
         ]
         for index in range(len(edgeSortingArgs)):
             (self.updateList).append([sortedNodesToContract[index], 0.0])
@@ -861,24 +861,24 @@ class GLGraph(object):
         for index, nodePair in enumerate(sortedNodesToContract):
             self.contract_nodePair(nodePair, sortedEdgeWeightListTemp[index])
 
-    def contract_nodePair(self, nodePair, edgeWeightIn=1.0):
+    def contract_nodePair(self, nodePair, edge_weight_in=1.0):
         startTime = time.time()
         nodesToContract = nodePair
-        edgeWeightToContract = edgeWeightIn
+        edge_weight_to_contract = edge_weight_in
         layoutTemp = self.layout
         tempElementLayoutTemp = np.array(
             [
                 (
                     layoutTemp[nodesToContract[0]][index]
-                    * self.nodeWeightList[nodesToContract[0]]
+                    * self.node_weight_list[nodesToContract[0]]
                     + layoutTemp[nodesToContract[1]][index]
-                    * self.nodeWeightList[nodesToContract[1]]
+                    * self.node_weight_list[nodesToContract[1]]
                 )
                 for index in range(len(layoutTemp[nodesToContract[0]]))
             ]
         ) / (
-            self.nodeWeightList[nodesToContract[0]]
-            + self.nodeWeightList[nodesToContract[1]]
+            self.node_weight_list[nodesToContract[0]]
+            + self.node_weight_list[nodesToContract[1]]
         )
         layoutTemp[nodesToContract[0]] = tuple(tempElementLayoutTemp)
         if nodesToContract[1] == 0:
@@ -902,7 +902,7 @@ class GLGraph(object):
         ).T
 
         self.nodes = np.delete(self.nodes, nodesToContract[1], 0)
-        self.nodeWeightList = np.dot(self.contractedNodesToNodes.T, self.nodeWeightsIn)
+        self.node_weight_list = np.dot(self.contractedNodesToNodes.T, self.node_weights_in)
 
         self.adjacency[nodesToContract[0], nodesToContract[1]] = 0.0
         self.adjacency[nodesToContract[1], nodesToContract[0]] = 0.0
@@ -912,18 +912,18 @@ class GLGraph(object):
         self.adjacency = (np.delete(self.adjacency.T, nodesToContract[1], 0)).T
 
         edgeListTemp = []
-        edgeWeightListTemp = []
+        edge_weight_list_temp = []
         for i in range(len(self.adjacency)):
             for j in range(i, len(self.adjacency)):
                 if self.adjacency[i, j] > 0:
                     edgeListTemp.append([i, j])
-                    edgeWeightListTemp.append(self.adjacency[i, j])
+                    edge_weight_list_temp.append(self.adjacency[i, j])
 
         self.edges = np.array(edgeListTemp)
-        self.edgeWeightList = np.array(edgeWeightListTemp)
+        self.edge_weight_list = np.array(edge_weight_list_temp)
 
         self.laplacian = self.adjacency_to_laplacian(self.adjacency)
-        self.nodeWeightedLaplacian = (((self.laplacian).T) / self.nodeWeightList).T
+        self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
 
         self.updatedInverses = False
         endTime = time.time()
