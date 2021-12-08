@@ -175,7 +175,7 @@ def main(args):
                 # If q is fixed at 1 (ie, qos==0), use reduce_graph_single_edge,
                 # as we do not care if the edges form a matching.
                 g.reduce_graph_single_edge(
-                    minSamples=num_samples,
+                    num_samples=num_samples,
                     p_min=min_prob_per_act,
                     reduction_type=action_switch,
                     reduction_target=reduction_target,
@@ -240,11 +240,11 @@ def main(args):
     g.update_inverse_laplacian()
 
     # This is the reduced node-weighted laplacian of size $\tilde{V} \times \tilde{V}$
-    reducedLaplacian = g.node_weighted_inv_lap
+    reduced_lap = g.node_weighted_inv_lap
 
     # This is the reduced node-weighted laplacian appropriately projected back to
     # $V \times V$. Use this to get approximate solutions to your Lx=b problems.
-    reducedLaplacianOriginalDimension = g.project_reduced_to_original(reducedLaplacian)
+    reduced_lap_orig_dim = g.project_reduced_to_original(reduced_lap)
 
     if has_igraph:
         print_graph(g)
