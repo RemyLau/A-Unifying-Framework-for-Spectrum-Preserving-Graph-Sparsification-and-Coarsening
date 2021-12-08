@@ -149,21 +149,21 @@ def main(args):
                 # as the edges should form a matching.
                 g.reduce_graph_multi_edge(
                     num_samples=num_samples,
-                    qFraction=qos,
-                    pMin=min_prob_per_act,
+                    q_frac=qos,
+                    p_min=min_prob_per_act,
                     reduction_type=action_switch,
                     reduction_target=reduction_target,
-                    maxReweightFactor=0,
+                    max_reweight_factor=0,
                 )
             else:
                 # If q is fixed at 1 (ie, qos==0), use reduce_graph_single_edge,
                 # as we do not care if the edges form a matching.
                 g.reduce_graph_single_edge(
                     minSamples=num_samples,
-                    pMin=min_prob_per_act,
+                    p_min=min_prob_per_act,
                     reduction_type=action_switch,
                     reduction_target=reduction_target,
-                    maxReweightFactor=0,
+                    max_reweight_factor=0,
                 )
 
             # If targeting nodes, save data whenever the number of nodes is reduced.

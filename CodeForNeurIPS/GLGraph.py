@@ -3,7 +3,7 @@ import random
 import time
 
 # 0: prints nothing, 1: prints what its doing, 2: prints timing information
-diagnosticSwitch = 0
+diagnosticSwitch = 1
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 
@@ -249,10 +249,10 @@ class GLGraph(object):
         wOmegaIn,
         mIn,
         tauIn,
-        pMin=0.125,
+        p_min=0.125,
         reduction_type="both",
         reduction_target="edges",
-        maxReweightFactor=0,
+        max_reweight_factor=0,
     ):
         startTime = time.time()
         if reduction_type == "delete" and reduction_target == "nodes":
@@ -264,16 +264,16 @@ class GLGraph(object):
             if reduction_type == "delete":
                 if wOmegaIn > 1.0 - 10e-6:
                     return [0.0, [0.0, 0.0, 1.0, 1.0]]
-                minBetaStarTemp = mIn / (1 - wOmegaIn) / (1 - pMin)
-                deletionProbTemp = pMin
+                minBetaStarTemp = mIn / (1 - wOmegaIn) / (1 - p_min)
+                deletionProbTemp = p_min
                 contractionProbTemp = 0.0
-                reweightProbTemp = 1.0 - pMin
+                reweightProbTemp = 1.0 - p_min
                 reweightFactorTemp = (1.0 - deletionProbTemp / (1.0 - wOmegaIn)) ** -1
-                if maxReweightFactor > 0:
-                    if deletionProbTemp > (1.0 - maxReweightFactor ** -1) * (
+                if max_reweight_factor > 0:
+                    if deletionProbTemp > (1.0 - max_reweight_factor ** -1) * (
                         1.0 - wOmegaIn
                     ):
-                        deletionProbTemp = (1.0 - maxReweightFactor ** -1) * (
+                        deletionProbTemp = (1.0 - max_reweight_factor ** -1) * (
                             1.0 - wOmegaIn
                         )
                         reweightProbTemp = 1.0 - deletionProbTemp
@@ -288,10 +288,10 @@ class GLGraph(object):
                     reweightFactorTemp,
                 ]
             elif reduction_type == "contract":
-                minBetaStarTemp = mIn / wOmegaIn / (1.0 - pMin) / (1.0 + tauIn) ** 0.5
+                minBetaStarTemp = mIn / wOmegaIn / (1.0 - p_min) / (1.0 + tauIn) ** 0.5
                 deletionProbTemp = 0.0
-                contractionProbTemp = pMin
-                reweightProbTemp = 1.0 - pMin
+                contractionProbTemp = p_min
+                reweightProbTemp = 1.0 - p_min
                 reweightFactorTemp = 1.0 - contractionProbTemp / wOmegaIn
                 if contractionProbTemp > wOmegaIn:
                     minBetaStarTemp = (
@@ -310,15 +310,15 @@ class GLGraph(object):
             elif reduction_type == "both":
                 if wOmegaIn > 1.0 - 10e-14:
                     minBetaStarTemp = (
-                        mIn / wOmegaIn / (1.0 - pMin) / (1.0 + tauIn) ** 0.5
+                        mIn / wOmegaIn / (1.0 - p_min) / (1.0 + tauIn) ** 0.5
                     )
                     deletionProbTemp = 0.0
-                    contractionProbTemp = pMin
-                    reweightProbTemp = 1.0 - pMin
+                    contractionProbTemp = p_min
+                    reweightProbTemp = 1.0 - p_min
                     reweightFactorTemp = 1.0 - contractionProbTemp / wOmegaIn
-                    if maxReweightFactor > 0:
-                        if reweightFactorTemp < maxReweightFactor ** -1:
-                            contractionProbTemp = (1.0 - maxReweightFactor ** -1) * (
+                    if max_reweight_factor > 0:
+                        if reweightFactorTemp < max_reweight_factor ** -1:
+                            contractionProbTemp = (1.0 - max_reweight_factor ** -1) * (
                                 wOmegaIn
                             )
                             reweightProbTemp = 1.0 - contractionProbTemp
@@ -337,8 +337,8 @@ class GLGraph(object):
                     ]
                 else:
                     minBetaStarTempList = [
-                        mIn / (1.0 - wOmegaIn) / (1.0 - pMin),
-                        mIn / wOmegaIn / (1.0 - pMin) / (1.0 + tauIn) ** 0.5,
+                        mIn / (1.0 - wOmegaIn) / (1.0 - p_min),
+                        mIn / wOmegaIn / (1.0 - p_min) / (1.0 + tauIn) ** 0.5,
                     ]
                     minBetaStarIndex = np.argmin(minBetaStarTempList)
                     if (
@@ -346,17 +346,17 @@ class GLGraph(object):
                         and minBetaStarTempList[0] != minBetaStarTempList[1]
                     ):
                         minBetaStarTemp = minBetaStarTempList[0]
-                        deletionProbTemp = pMin
+                        deletionProbTemp = p_min
                         contractionProbTemp = 0.0
-                        reweightProbTemp = 1.0 - pMin
+                        reweightProbTemp = 1.0 - p_min
                         reweightFactorTemp = (
                             1.0 - deletionProbTemp / (1.0 - wOmegaIn)
                         ) ** -1
                     else:
                         minBetaStarTemp = minBetaStarTempList[1]
                         deletionProbTemp = 0.0
-                        contractionProbTemp = pMin
-                        reweightProbTemp = 1.0 - pMin
+                        contractionProbTemp = p_min
+                        reweightProbTemp = 1.0 - p_min
                         reweightFactorTemp = 1.0 - contractionProbTemp / wOmegaIn
                     if contractionProbTemp > wOmegaIn:
                         minBetaStarTemp = (
@@ -388,10 +388,10 @@ class GLGraph(object):
                     ]
 
         if reduction_target == "nodes":
-            minBetaStarTemp = mIn / wOmegaIn / (1.0 - pMin)
+            minBetaStarTemp = mIn / wOmegaIn / (1.0 - p_min)
             deletionProbTemp = 0.0
-            contractionProbTemp = pMin
-            reweightProbTemp = 1.0 - pMin
+            contractionProbTemp = p_min
+            reweightProbTemp = 1.0 - p_min
             reweightFactorTemp = 1.0 - contractionProbTemp / wOmegaIn
             if contractionProbTemp > wOmegaIn:
                 minBetaStarTemp = mIn / wOmegaIn / (1.0 - wOmegaIn)
@@ -416,10 +416,10 @@ class GLGraph(object):
         wOmegaListIn,
         mListIn,
         tauListIn,
-        pMin=0.125,
+        p_min=0.125,
         reduction_type="both",
         reduction_target="edges",
-        maxReweightFactor=0,
+        max_reweight_factor=0,
     ):
         startTime = time.time()
         minBetaStarListOut = np.zeros(len(wOmegaListIn))
@@ -429,10 +429,10 @@ class GLGraph(object):
                 wOmegaListIn[index],
                 mListIn[index],
                 tauListIn[index],
-                pMin=pMin,
+                p_min=p_min,
                 reduction_type=reduction_type,
                 reduction_target=reduction_target,
-                maxReweightFactor=maxReweightFactor,
+                max_reweight_factor=max_reweight_factor,
             )
             minBetaStarListOut[index] = minBetaStarTemp
             actionProbReweightListOut[index] = actionProbReweightTemp
@@ -444,10 +444,10 @@ class GLGraph(object):
     def reduce_graph_single_edge(
         self,
         num_samples=1,
-        pMin=0.125,
+        p_min=0.125,
         reduction_type="both",
         reduction_target="edges",
-        maxReweightFactor=0,
+        max_reweight_factor=0,
     ):
         startTime = time.time()
         if not self.updatedInverses:
@@ -465,10 +465,10 @@ class GLGraph(object):
             sampledWOmegaList,
             sampledMList,
             sampledTauList,
-            pMin=pMin,
+            p_min=p_min,
             reduction_type=reduction_type,
             reduction_target=reduction_target,
-            maxReweightFactor=maxReweightFactor,
+            max_reweight_factor=max_reweight_factor,
         )
         nonzeroIndices = [
             index
@@ -718,11 +718,11 @@ class GLGraph(object):
     def reduce_graph_multi_edge(
         self,
         num_samples=0,
-        qFraction=0.0625,
-        pMin=0.125,
+        q_frac=0.0625,
+        p_min=0.125,
         reduction_type="both",
         reduction_target="edges",
-        maxReweightFactor=0,
+        max_reweight_factor=0,
     ):
         if not self.updatedInverses:
             self.update_inverse_laplacian()
@@ -739,10 +739,10 @@ class GLGraph(object):
             sampledWOmegaList,
             sampledMList,
             sampledTauList,
-            pMin=pMin,
+            p_min=p_min,
             reduction_type=reduction_type,
             reduction_target=reduction_target,
-            maxReweightFactor=maxReweightFactor,
+            max_reweight_factor=max_reweight_factor,
         )
         nonzeroIndices = [
             index
@@ -752,7 +752,7 @@ class GLGraph(object):
         if len(nonzeroIndices) == 0:
             return
 
-        numPerturbationsTemp = np.max([1, int(round(qFraction * len(nonzeroIndices)))])
+        numPerturbationsTemp = np.max([1, int(round(q_frac * len(nonzeroIndices)))])
         chosenEdgesIndices = np.array(nonzeroIndices)[
             list(
                 np.argsort(np.array(sampledMinBetaStarList)[nonzeroIndices])[
