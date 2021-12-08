@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 import numpy as np
 from GLGraph import GLGraph
@@ -78,7 +79,21 @@ def parse_args():
         help="Do you have iGraph for Python, and is it working correctly?",
     )
 
+    parser.add_argument(
+        "--log-level",
+        default="NONE",
+        choices=["NONE", "INFO", "TIME"],
+        help="Logging leve: NONE to log nothing, INFO to log what its doing, "
+        "TIME to log timing information",
+    )
+
     return parser.parse_args()
+
+
+def setup_logging(args):
+    if args.log_level != "NONE":
+        logging.TIME = 15
+        logging.basicConfig(level=getattr(logging, args.log_level))
 
 
 def main(args):
@@ -90,6 +105,7 @@ def main(args):
     min_target_items = args.min_target_items
     plot_error = args.plot_error
     has_igraph = args.has_igraph
+    log_level = args.log_level
 
     edgelist = np.load(args.input_file)
 
@@ -135,7 +151,7 @@ def main(args):
         while True:
             iteration += 1
             # Say where we are in the reduction.
-            if np.mod(iteration, 1) == 0:
+            if np.mod(iteration, 1) == 0 and log_level == "NONE":
                 print(
                     f"Iteration {iteration}, {len(g.edges)} "
                     f"/ {len(g.edges_in)} edges, "
@@ -236,4 +252,5 @@ def main(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    setup_logging(args)
     main(args)

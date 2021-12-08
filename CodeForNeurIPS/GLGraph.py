@@ -1,9 +1,8 @@
-import numpy as np
 import random
 import time
+import logging
 
-# 0: prints nothing, 1: prints what its doing, 2: prints timing information
-diagnosticSwitch = 1
+import numpy as np
 
 flatten = lambda l: [item for sublist in l for item in sublist]
 
@@ -17,8 +16,7 @@ class GLGraph(object):
         plot_error=False,
         layout="random",
     ):
-        if diagnosticSwitch > 0:
-            print("Making GLGraph")
+        logging.info("Making GLGraph")
         startTime = time.time()
         self.thereIsAProblem = False
         self.edges_in = np.array(edges)
@@ -42,8 +40,7 @@ class GLGraph(object):
         self.node_weight_list_old = np.copy(self.node_weights_in)
 
         # making matrices
-        if diagnosticSwitch > 0:
-            print("making matrices")
+        logging.info("making matrices")
         self.adjacency = self.make_adjacency(
             self.edges_in, self.nodes_in, self.edge_weights_in
         )
@@ -57,8 +54,7 @@ class GLGraph(object):
         self.contractedNodesToNodes = np.identity(len(self.nodes_in))
 
         # initializing layout
-        if diagnosticSwitch > 0:
-            print("making layout")
+        logging.info("making layout")
         if len(np.shape(layout)) == 0:
             if layout == "random":
                 self.layout = np.array(
@@ -67,8 +63,7 @@ class GLGraph(object):
                 self.boundaries = np.array([[0.0, 0.0], [1.0, 1.0]])
             else:
                 # making igraph object
-                if diagnosticSwitch > 0:
-                    print("making graph")
+                logging.info("making graph")
                 import igraph as ig
 
                 self.igraphIn = ig.Graph()
@@ -90,8 +85,7 @@ class GLGraph(object):
             self.layout = np.array([tuple(item) for item in layout])
 
         # computing the inverse and initial eigenvectors
-        if diagnosticSwitch > 0:
-            print("making inverses")
+        logging.info("making inverses")
         self.node_weighted_inv_lap_in = self.invert_laplacian(
             self.node_weighted_lap_in, self.jMat
         )
@@ -117,8 +111,7 @@ class GLGraph(object):
         self.rowsToDelete = []
 
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("__init__: ", endTime - startTime)
+        logging.log(15, f"__init__: {endTime - startTime}")
 
     def make_adjacency(
         self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]
@@ -235,8 +228,7 @@ class GLGraph(object):
             )
 
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("make_wOmega_m_tau: ", endTime - startTime)
+        logging.log(15, f"make_wOmega_m_tau: {endTime - startTime}")
         return [
             edgesToSample,
             effectiveResistanceOut * self.edge_weight_list[edgesToSample],
@@ -407,8 +399,7 @@ class GLGraph(object):
             ]
 
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("wOmega_m_to_betaStar: ", endTime - startTime)
+        logging.log(15, f"wOmega_m_to_betaStar: {endTime - startTime}")
         return minBetaStarTemp, actionProbReweightTemp
 
     def wOmega_m_to_betaStarList(
@@ -437,8 +428,7 @@ class GLGraph(object):
             minBetaStarListOut[index] = minBetaStarTemp
             actionProbReweightListOut[index] = actionProbReweightTemp
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("wOmega_m_to_betaStarList: ", endTime - startTime)
+        logging.log(15, f"wOmega_m_to_betaStarList: {endTime - startTime}")
         return minBetaStarListOut, actionProbReweightListOut
 
     def reduce_graph_single_edge(
@@ -487,26 +477,20 @@ class GLGraph(object):
         edgeAction = np.random.choice(range(3), p=edgeActionProbs)
 
         if edgeAction == 0:
-            if diagnosticSwitch > 0:
-                print("deleting edge ", self.edges[chosenEdgeRealIndex])
+            logging.info(f"deleting edge {self.edges[chosenEdgeRealIndex]}")
             self.delete_edge(chosenEdgeRealIndex)
         if edgeAction == 1:
-            if diagnosticSwitch > 0:
-                print("contracting edge ", self.edges[chosenEdgeRealIndex])
+            logging.info(f"contracting edge {self.edges[chosenEdgeRealIndex]}")
             self.contract_edge(chosenEdgeRealIndex)
         if edgeAction == 2 and chosenActionProbReweight[3] != 1.0:
-            if diagnosticSwitch > 0:
-                print(
-                    "reweighting edge ",
-                    self.edges[chosenEdgeRealIndex],
-                    " by factor ",
-                    chosenActionProbReweight[3],
-                )
+            logging.info(
+                f"reweighting edge { self.edges[chosenEdgeRealIndex]} "
+                f"by factor {chosenActionProbReweight[3]}",
+            )
             self.reweight_edge(chosenEdgeRealIndex, chosenActionProbReweight[3])
 
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("reduce_graph_single_edge: ", endTime - startTime)
+        logging.log(15, f"reduce_graph_single_edge: {endTime - startTime}")
 
     def delete_edge(self, edgeIndexIn):
         startTime = time.time()
@@ -522,8 +506,7 @@ class GLGraph(object):
         self.updatedInverses = False
         (self.updateList).append([nodesTemp, 1.0 / changeTemp])
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("delete_edge: ", endTime - startTime)
+        logging.log(15, f"delete_edge: {endTime - startTime}")
 
     def reweight_edge(self, edgeIndexIn, reweightFactorIn):
         startTime = time.time()
@@ -538,8 +521,7 @@ class GLGraph(object):
         self.updatedInverses = False
         (self.updateList).append([nodesTemp, 1.0 / changeTemp])
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("reweight_edge: ", endTime - startTime)
+        logging.log(15, f"reweight_edge: {endTime - startTime}")
 
     def contract_edge(self, edgeIndexIn):
         startTime = time.time()
@@ -614,8 +596,7 @@ class GLGraph(object):
         (self.updateList).append([nodesToContract, 0.0])
         (self.rowsToDelete).append(nodesToContract)
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("contract_edge: ", endTime - startTime)
+        logging.log(15, f"contract_edge: {endTime - startTime}")
 
     def make_incidence_row(self, numTotalIn, edgeIn):
         rowOut = np.zeros(numTotalIn)
@@ -682,8 +663,7 @@ class GLGraph(object):
         self.node_weight_list_old = np.copy(self.node_weight_list)
 
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("update_inverse_laplacian, ", endTime - startTime)
+        logging.log(15, f"update_inverse_laplacian: {endTime - startTime}")
 
     def get_edgeList_proposal_RM(self, num_samples_in=0):
         adjacencyTemp = self.adjacency
@@ -773,21 +753,16 @@ class GLGraph(object):
             edgeAction = np.random.choice(range(3), p=edgeActionProbs)
 
             if edgeAction == 0:
-                if diagnosticSwitch > 0:
-                    print("deleting edge ", chosenEdgeRealIndex)
+                logging.info(f"deleting edge {chosenEdgeRealIndex}")
                 edgesToDelete.append(chosenEdgeRealIndex)
             if edgeAction == 1:
-                if diagnosticSwitch > 0:
-                    print("contracting edge ", chosenEdgeRealIndex)
+                logging.info(f"contracting edge {chosenEdgeRealIndex}")
                 edgesToContract.append(chosenEdgeRealIndex)
             if edgeAction == 2 and chosenActionProbReweightList[index][3] != 1.0:
-                if diagnosticSwitch > 0:
-                    print(
-                        "reweighting edge ",
-                        chosenEdgeRealIndex,
-                        " by factor ",
-                        chosenActionProbReweightList[index][3],
-                    )
+                logging.info(
+                    f"reweighting edge {chosenEdgeRealIndex}"
+                    f" by factor {chosenActionProbReweightList[index][3]}",
+                )
                 self.reweight_edge(
                     chosenEdgeRealIndex, chosenActionProbReweightList[index][3]
                 )
@@ -827,8 +802,7 @@ class GLGraph(object):
 
         self.updatedInverses = False
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("delete_edge, ", endTime - startTime)
+        logging.log(15, f"delete_edge: {endTime - startTime}")
 
     def contract_multiple_edges(
         self, edgeIndexListIn
@@ -927,5 +901,4 @@ class GLGraph(object):
 
         self.updatedInverses = False
         endTime = time.time()
-        if diagnosticSwitch > 1:
-            print("contract_nodePair, ", endTime - startTime)
+        logging.log(15, f"contract_nodePair: {endTime - startTime}")
