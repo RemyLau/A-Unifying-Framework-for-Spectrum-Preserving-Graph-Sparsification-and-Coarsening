@@ -930,16 +930,3 @@ class GLGraph(object):
         endTime = time.time()
         if diagnosticSwitch > 1:
             print("contract_nodePair, ", endTime - startTime)
-
-
-##########################################
-### Uncomment if you have iGraph and want/are able to plot
-##########################################
-# def print_graph(self,gIn,layoutIn='auto'):
-#   if layoutIn=='auto':
-#       plotTemp = plot(gIn,vertex_color=[0,0,0])
-#   else:
-#       plotTemp = plot(gIn,vertex_color=[0,0,0],layout=layoutIn)
-#   display.clear_output(wait=True)
-#   display.display(plotTemp)
-#   plt.gcf().clear()

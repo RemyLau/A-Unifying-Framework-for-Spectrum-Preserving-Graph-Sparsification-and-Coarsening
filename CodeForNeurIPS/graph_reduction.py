@@ -100,6 +100,12 @@ if igraph:
     # Import iGraph if you have it.
     from igraph import *
 
+    def print_graph(graph, layout="auto"):
+        iGraph = Graph()
+        iGraph.add_vertices(g.nodeList)
+        iGraph.add_edges(g.edgeList)
+        plot(iGraph, vertex_color=[0, 0, 0], layout=layout)
+
 if min_target_items == "none":
     if reduction_target == "nodes":
         min_target_items = 2
@@ -228,3 +234,6 @@ reducedLaplacian = g.nodeWeightedInverseLaplacian
 # This is the reduced node-weighted laplacian appropriately projected back to
 # $V \times V$. Use this to get approximate solutions to your Lx=b problems.
 reducedLaplacianOriginalDimension = g.project_reduced_to_original(reducedLaplacian)
+
+if igraph:
+    print_graph(g)
