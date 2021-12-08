@@ -17,7 +17,7 @@ class GLGraph(object):
         layout="random",
     ):
         logging.info("Making GLGraph")
-        startTime = time.time()
+        startTime = time.perf_counter()
         self.thereIsAProblem = False
         self.edges_in = np.array(edges)
         self.nodes_in = sorted(list(set(flatten(self.edges_in))))
@@ -110,7 +110,7 @@ class GLGraph(object):
         self.updateList = []
         self.rowsToDelete = []
 
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"__init__: {endTime - startTime}")
 
     def make_adjacency(
@@ -180,7 +180,7 @@ class GLGraph(object):
         return distanceListOut
 
     def make_wOmega_m_tau(self, method="random", num_samples=0):
-        startTime = time.time()
+        startTime = time.perf_counter()
         if method == "random":
             if num_samples == 0:
                 edgesToSample = range(len(self.edge_weight_list))
@@ -227,7 +227,7 @@ class GLGraph(object):
                 [item for item in neighbors0 if item in neighbors1]
             )
 
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"make_wOmega_m_tau: {endTime - startTime}")
         return [
             edgesToSample,
@@ -246,7 +246,7 @@ class GLGraph(object):
         reduction_target="edges",
         max_reweight_factor=0,
     ):
-        startTime = time.time()
+        startTime = time.perf_counter()
         if reduction_type == "delete" and reduction_target == "nodes":
             print("Cannot do deletion only when targeting reduction of nodes")
             return
@@ -398,7 +398,7 @@ class GLGraph(object):
                 reweightFactorTemp,
             ]
 
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"wOmega_m_to_betaStar: {endTime - startTime}")
         return minBetaStarTemp, actionProbReweightTemp
 
@@ -412,7 +412,7 @@ class GLGraph(object):
         reduction_target="edges",
         max_reweight_factor=0,
     ):
-        startTime = time.time()
+        startTime = time.perf_counter()
         minBetaStarListOut = np.zeros(len(wOmegaListIn))
         actionProbReweightListOut = np.zeros((len(wOmegaListIn), 4))
         for index in range(len(wOmegaListIn)):
@@ -427,7 +427,7 @@ class GLGraph(object):
             )
             minBetaStarListOut[index] = minBetaStarTemp
             actionProbReweightListOut[index] = actionProbReweightTemp
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"wOmega_m_to_betaStarList: {endTime - startTime}")
         return minBetaStarListOut, actionProbReweightListOut
 
@@ -439,7 +439,7 @@ class GLGraph(object):
         reduction_target="edges",
         max_reweight_factor=0,
     ):
-        startTime = time.time()
+        startTime = time.perf_counter()
         if not self.updatedInverses:
             self.update_inverse_laplacian()
         (
@@ -489,11 +489,11 @@ class GLGraph(object):
             )
             self.reweight_edge(chosenEdgeRealIndex, chosenActionProbReweight[3])
 
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"reduce_graph_single_edge: {endTime - startTime}")
 
     def delete_edge(self, edgeIndexIn):
-        startTime = time.time()
+        startTime = time.perf_counter()
         changeTemp = -1.0 * self.edge_weight_list[edgeIndexIn]
         nodesTemp = self.edges[edgeIndexIn]
         self.adjacency[nodesTemp[0], nodesTemp[1]] = 0.0
@@ -505,11 +505,11 @@ class GLGraph(object):
 
         self.updatedInverses = False
         (self.updateList).append([nodesTemp, 1.0 / changeTemp])
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"delete_edge: {endTime - startTime}")
 
     def reweight_edge(self, edgeIndexIn, reweightFactorIn):
-        startTime = time.time()
+        startTime = time.perf_counter()
         changeTemp = (reweightFactorIn - 1.0) * self.edge_weight_list[edgeIndexIn]
         nodesTemp = self.edges[edgeIndexIn]
         self.adjacency[nodesTemp[0], nodesTemp[1]] += changeTemp
@@ -520,11 +520,11 @@ class GLGraph(object):
 
         self.updatedInverses = False
         (self.updateList).append([nodesTemp, 1.0 / changeTemp])
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"reweight_edge: {endTime - startTime}")
 
     def contract_edge(self, edgeIndexIn):
-        startTime = time.time()
+        startTime = time.perf_counter()
         nodesToContract = [
             int(self.edges[int(edgeIndexIn), 0]),
             int(self.edges[int(edgeIndexIn), 1]),
@@ -595,7 +595,7 @@ class GLGraph(object):
         self.updatedInverses = False
         (self.updateList).append([nodesToContract, 0.0])
         (self.rowsToDelete).append(nodesToContract)
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"contract_edge: {endTime - startTime}")
 
     def make_incidence_row(self, numTotalIn, edgeIn):
@@ -605,7 +605,7 @@ class GLGraph(object):
         return rowOut
 
     def update_inverse_laplacian(self):
-        startTime = time.time()
+        startTime = time.perf_counter()
 
         edgesToChange = [item[0] for item in self.updateList]
         inverseChange = [item[1] for item in self.updateList]
@@ -662,7 +662,7 @@ class GLGraph(object):
         self.rowsToDelete = []
         self.node_weight_list_old = np.copy(self.node_weight_list)
 
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"update_inverse_laplacian: {endTime - startTime}")
 
     def get_edgeList_proposal_RM(self, num_samples_in=0):
@@ -787,7 +787,7 @@ class GLGraph(object):
             self.contract_multiple_edges(shiftedEdgesToContract)
 
     def delete_multiple_edges(self, edgeIndexListIn):
-        startTime = time.time()
+        startTime = time.perf_counter()
         for edgeIndex in edgeIndexListIn:
             changeTemp = -1.0 * self.edge_weight_list[edgeIndex]
             nodesTemp = self.edges[edgeIndex]
@@ -801,13 +801,13 @@ class GLGraph(object):
         self.edge_weight_list = np.delete(self.edge_weight_list, edgeIndexListIn, 0)
 
         self.updatedInverses = False
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"delete_edge: {endTime - startTime}")
 
     def contract_multiple_edges(
         self, edgeIndexListIn
     ):  # ONLY WORKS WITH EDGES THAT DON'T SHARE NODES!!!
-        startContractTime = time.time()
+        startContractTime = time.perf_counter()
 
         nodesToContract = np.array(
             [
@@ -836,7 +836,7 @@ class GLGraph(object):
             self.contract_nodePair(nodePair, sortedEdgeWeightListTemp[index])
 
     def contract_nodePair(self, nodePair, edge_weight_in=1.0):
-        startTime = time.time()
+        startTime = time.perf_counter()
         nodesToContract = nodePair
         edge_weight_to_contract = edge_weight_in
         layoutTemp = self.layout
@@ -900,5 +900,5 @@ class GLGraph(object):
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
 
         self.updatedInverses = False
-        endTime = time.time()
+        endTime = time.perf_counter()
         logging.log(15, f"contract_nodePair: {endTime - startTime}")
