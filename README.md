@@ -21,3 +21,12 @@ outputs:
 	reducedLaplacian:			The reduced node-weighted Laplacian of dimension \tilde{n} \times \tilde{n}
 	reducedLaplacianOriginalDimension:			The reduced node-weighted Laplacian of dimension n \times n
 
+## Installing dependencies
+
+```bash
+# Optionally create a virtual environment
+conda create -n glgraph python=3.8 -y && conda activate glgraph
+
+# Install required packages
+pip install -r requirements.txt
+```
