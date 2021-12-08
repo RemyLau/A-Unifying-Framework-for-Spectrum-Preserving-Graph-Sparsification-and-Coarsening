@@ -97,10 +97,10 @@ def main(args):
         from igraph import Graph, plot
 
         def print_graph(g, layout="auto"):
-            iGraph = Graph()
-            iGraph.add_vertices(g.nodeList)
-            iGraph.add_edges(g.edgeList)
-            plot(iGraph, vertex_color=[0, 0, 0], layout=layout)
+            igraph_graph = Graph()
+            igraph_graph.add_vertices(g.nodes)
+            igraph_graph.add_edges(g.edges)
+            plot(igraph_graph, vertex_color=[0, 0, 0], layout=layout)
 
     print("Starting")
     if min_target_items == "none":
@@ -125,8 +125,8 @@ def main(args):
         edgeNumList = []  # List of edges in the reduced graphs if target is 'edges'.
         nodeNumList = []  # List of nodes in the reduced graphs if target is 'nodes'.
         eigenAlignList = []  # List of hyperbolic distance of eigenvector output if plot_error is True.
-        edgeNumList.append(len(g.edgeList))
-        nodeNumList.append(len(g.nodeList))
+        edgeNumList.append(len(g.edges))
+        nodeNumList.append(len(g.nodes))
 
         if plot_error:
             eigenAlignList.append(g.get_eigenvector_alignment()[1:])
@@ -137,9 +137,9 @@ def main(args):
             # Say where we are in the reduction.
             if np.mod(iteration, 1) == 0:
                 print(
-                    f"Iteration {iteration}, {len(g.edgeList)} "
-                    f"/ {len(g.edgeListIn)} edges, "
-                    f"{len(g.nodeList)} / {len(g.nodeListIn)} nodes",
+                    f"Iteration {iteration}, {len(g.edges)} "
+                    f"/ {len(g.edges_in)} edges, "
+                    f"{len(g.nodes)} / {len(g.nodes)} nodes",
                     end="\r",
                     flush=True,
                 )
@@ -168,43 +168,43 @@ def main(args):
 
             # If targeting nodes, save data whenever the number of nodes is reduced.
             if reduction_target == "nodes":
-                if len(g.nodeList) < nodeNumList[-1]:
-                    edgeNumList.append(len(g.edgeList))
-                    nodeNumList.append(len(g.nodeList))
+                if len(g.nodes) < nodeNumList[-1]:
+                    edgeNumList.append(len(g.edges))
+                    nodeNumList.append(len(g.nodes))
                     if plot_error:
                         eigenAlignList.append(g.get_eigenvector_alignment()[1:])
 
             # If targeting edges, save data whenever the number of edges is reduced.
             if reduction_target == "edges":
-                if len(g.edgeList) < edgeNumList[-1]:
-                    edgeNumList.append(len(g.edgeList))
-                    nodeNumList.append(len(g.nodeList))
+                if len(g.edges) < edgeNumList[-1]:
+                    edgeNumList.append(len(g.edges))
+                    nodeNumList.append(len(g.nodes))
                     if plot_error:
                         eigenAlignList.append(g.get_eigenvector_alignment()[1:])
 
             # If we can merge nodes, go until there are only two left.
             if action_switch == "both":
                 if (
-                    len(g.nodeList) < 3
-                    or (reduction_target == "edges" and len(g.edgeList) < min_target_items)
-                    or (reduction_target == "nodes" and len(g.nodeList) < min_target_items)
+                    len(g.nodes) < 3
+                    or (reduction_target == "edges" and len(g.edges) < min_target_items)
+                    or (reduction_target == "nodes" and len(g.nodes) < min_target_items)
                 ):
                     break
 
             # If we cannot merge nodes, go until we have a spanning tree.
             if action_switch == "delete":
-                if len(g.edgeList) < len(nodes) or (
-                    reduction_target == "edges" and len(g.edgeList) < min_target_items
+                if len(g.edges) < len(nodes) or (
+                    reduction_target == "edges" and len(g.edges) < min_target_items
                 ):
                     break
 
         if has_igraph:
             # If you have iGraph, use to check if the resulting graph was
             # disconnected (should not happen for qos==0)
-            iGraph = Graph()
-            iGraph.add_vertices(g.nodeList)
-            iGraph.add_edges(g.edgeList)
-            if not iGraph.is_connected():
+            igraph_graph = Graph()
+            igraph_graph.add_vertices(g.nodes)
+            igraph_graph.add_edges(g.edges)
+            if not igraph_graph.is_connected():
                 print("Whoops! Disconnected. Retrying.")
             else:
                 connected = True
