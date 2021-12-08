@@ -122,14 +122,14 @@ def main(args):
             plot_error=plot_error,
             layout="random",
         )
-        edgeNumList = []  # List of edges in the reduced graphs if target is 'edges'.
-        nodeNumList = []  # List of nodes in the reduced graphs if target is 'nodes'.
-        eigenAlignList = []  # List of hyperbolic distance of eigenvector output if plot_error is True.
-        edgeNumList.append(len(g.edges))
-        nodeNumList.append(len(g.nodes))
+        edge_num_list = []  # List of edges in the reduced graphs if target is 'edges'.
+        node_num_list = []  # List of nodes in the reduced graphs if target is 'nodes'.
+        eigen_align_list = []  # List of hyperbolic distance of eigenvector output if plot_error is True.
+        edge_num_list.append(len(g.edges))
+        node_num_list.append(len(g.nodes))
 
         if plot_error:
-            eigenAlignList.append(g.get_eigenvector_alignment()[1:])
+            eigen_align_list.append(g.get_eigenvector_alignment()[1:])
 
         iteration = 0
         while True:
@@ -168,19 +168,19 @@ def main(args):
 
             # If targeting nodes, save data whenever the number of nodes is reduced.
             if reduction_target == "nodes":
-                if len(g.nodes) < nodeNumList[-1]:
-                    edgeNumList.append(len(g.edges))
-                    nodeNumList.append(len(g.nodes))
+                if len(g.nodes) < node_num_list[-1]:
+                    edge_num_list.append(len(g.edges))
+                    node_num_list.append(len(g.nodes))
                     if plot_error:
-                        eigenAlignList.append(g.get_eigenvector_alignment()[1:])
+                        eigen_align_list.append(g.get_eigenvector_alignment()[1:])
 
             # If targeting edges, save data whenever the number of edges is reduced.
             if reduction_target == "edges":
-                if len(g.edges) < edgeNumList[-1]:
-                    edgeNumList.append(len(g.edges))
-                    nodeNumList.append(len(g.nodes))
+                if len(g.edges) < edge_num_list[-1]:
+                    edge_num_list.append(len(g.edges))
+                    node_num_list.append(len(g.nodes))
                     if plot_error:
-                        eigenAlignList.append(g.get_eigenvector_alignment()[1:])
+                        eigen_align_list.append(g.get_eigenvector_alignment()[1:])
 
             # If we can merge nodes, go until there are only two left.
             if action_switch == "both":
