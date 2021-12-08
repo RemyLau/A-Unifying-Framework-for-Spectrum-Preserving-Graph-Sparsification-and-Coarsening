@@ -231,7 +231,7 @@ def main(args):
             # We will implement an iGraph-independent version soon.
             print(
                 "Did not check if graph is disconnected: "
-                "Results invalid if graph is disconnected."
+                "Results invalid if graph is disconnected.",
             )
             connected = True
 
