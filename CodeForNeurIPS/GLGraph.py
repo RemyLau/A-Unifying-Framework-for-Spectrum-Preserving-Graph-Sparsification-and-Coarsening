@@ -94,9 +94,7 @@ class GLGraph(object):
             self.eigvals_in = np.zeros(len(self.node_weighted_lap_in))
             self.eigvecs_in = np.zeros(np.shape(self.node_weighted_lap_in))
         else:
-            eigvals_tmp, eigvecs_tmp = np.linalg.eig(
-                self.node_weighted_lap_in
-            )
+            eigvals_tmp, eigvecs_tmp = np.linalg.eig(self.node_weighted_lap_in)
             order_tmp = np.argsort(eigvals_tmp)
             self.eigvals_in = eigvals_tmp[order_tmp]
             self.eigvecs_in = eigvecs_tmp.T[order_tmp]
@@ -113,9 +111,7 @@ class GLGraph(object):
         end_time = time.perf_counter()
         logging.log(15, f"__init__: {end_time - start_time}")
 
-    def make_adjacency(
-        self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]
-    ):
+    def make_adjacency(self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]):
         if np.any([item == "none" for item in nodes_in]):
             nodelist_tmp = sorted(list(set(flatten(edges_in))))
         else:
@@ -158,7 +154,8 @@ class GLGraph(object):
             np.dot(
                 mat_in,
                 np.dot(
-                    np.diag(1.0 / self.node_weight_list), self.contracted_nodes_to_nodes.T
+                    np.diag(1.0 / self.node_weight_list),
+                    self.contracted_nodes_to_nodes.T,
                 ),
             ),
         )
@@ -173,9 +170,7 @@ class GLGraph(object):
         for index in range(len(self.orig_eigvec_out)):
             dist_list_out[index] = self.hyperbolic_distance(
                 self.orig_eigvec_out[index],
-                np.dot(
-                    projected_node_weighted_inv_lap, self.eigvecs_in[index]
-                ),
+                np.dot(projected_node_weighted_inv_lap, self.eigvecs_in[index]),
             )
         return dist_list_out
 
@@ -202,8 +197,7 @@ class GLGraph(object):
             vertex0 = self.edges[edge_num][0]
             vertex1 = self.edges[edge_num][1]
             inv_dot_u_tmp = (
-                self.node_weighted_inv_lap[:, vertex0]
-                / self.node_weight_list[vertex0]
+                self.node_weighted_inv_lap[:, vertex0] / self.node_weight_list[vertex0]
                 - self.node_weighted_inv_lap[:, vertex1]
                 / self.node_weight_list[vertex1]
             )
@@ -211,7 +205,9 @@ class GLGraph(object):
                 self.node_weighted_inv_lap[vertex0]
                 - self.node_weighted_inv_lap[vertex1]
             )
-            effective_resistence_out[index] = inv_dot_u_tmp[vertex0] - inv_dot_u_tmp[vertex1]
+            effective_resistence_out[index] = (
+                inv_dot_u_tmp[vertex0] - inv_dot_u_tmp[vertex1]
+            )
             edge_importance_out[index] = np.dot(inv_dot_u_tmp, v_tmp_dot_inv)
             neighbors0 = [
                 index_inner
@@ -280,14 +276,19 @@ class GLGraph(object):
                     reweight_factor_tmp,
                 ]
             elif reduction_type == "contract":
-                min_betastar_tmp = m_in / womega_in / (1.0 - p_min) / (1.0 + tau_in) ** 0.5
+                min_betastar_tmp = (
+                    m_in / womega_in / (1.0 - p_min) / (1.0 + tau_in) ** 0.5
+                )
                 del_prob_tmp = 0.0
                 contraction_prob_tmp = p_min
                 reweight_prob_tmp = 1.0 - p_min
                 reweight_factor_tmp = 1.0 - contraction_prob_tmp / womega_in
                 if contraction_prob_tmp > womega_in:
                     min_betastar_tmp = (
-                        m_in / womega_in / (1.0 - womega_in) / (1 + (1.0 + tau_in) ** 0.5)
+                        m_in
+                        / womega_in
+                        / (1.0 - womega_in)
+                        / (1 + (1.0 + tau_in) ** 0.5)
                     )
                     del_prob_tmp = 1.0 - womega_in
                     contraction_prob_tmp = womega_in
@@ -467,9 +468,7 @@ class GLGraph(object):
         ]
         if len(nonzeros) == 0:
             return
-        chosen_edges = nonzeros[
-            np.argmin(sampled_min_betastar_list[nonzeros])
-        ]
+        chosen_edges = nonzeros[np.argmin(sampled_min_betastar_list[nonzeros])]
 
         chosen_edge_real_index = sampled_edgelist[chosen_edges]
         chosen_act_prob_reweight = sampled_act_prob_reweight_list[chosen_edges]
@@ -569,7 +568,9 @@ class GLGraph(object):
         ).T
 
         self.nodes = np.delete(self.nodes, nodes_to_contract[1], 0)
-        self.node_weight_list = np.dot(self.contracted_nodes_to_nodes.T, self.node_weights_in)
+        self.node_weight_list = np.dot(
+            self.contracted_nodes_to_nodes.T, self.node_weights_in
+        )
 
         self.adj[nodes_to_contract[0], nodes_to_contract[1]] = 0.0
         self.adj[nodes_to_contract[1], nodes_to_contract[0]] = 0.0
@@ -735,9 +736,7 @@ class GLGraph(object):
         num_pert_tmp = np.max([1, int(round(q_frac * len(nonzeros)))])
         chosen_edges_indices = np.array(nonzeros)[
             list(
-                np.argsort(np.array(sampled_min_betastar_list)[nonzeros])[
-                    :num_pert_tmp
-                ]
+                np.argsort(np.array(sampled_min_betastar_list)[nonzeros])[:num_pert_tmp]
             )
         ]
         chosen_edges_real_indices = np.array(sampled_edgelist)[chosen_edges_indices]
@@ -808,16 +807,18 @@ class GLGraph(object):
         # ONLY WORKS WITH EDGES THAT DON'T SHARE NODES!!!
         nodes_to_contract = np.array(
             [
-                sorted(
-                    [int(self.edges[int(edge), 0]), int(self.edges[int(edge), 1])]
-                )
+                sorted([int(self.edges[int(edge), 0]), int(self.edges[int(edge), 1])])
                 for edge in edge_index_list_in
             ]
         )
         edge_sorting_args = np.argsort(-np.array(nodes_to_contract[:, 1]))
 
-        sorted_nodes_to_contract = [nodes_to_contract[index] for index in edge_sorting_args]
-        sorted_edges_to_contract = [edge_index_list_in[index] for index in edge_sorting_args]
+        sorted_nodes_to_contract = [
+            nodes_to_contract[index] for index in edge_sorting_args
+        ]
+        sorted_edges_to_contract = [
+            edge_index_list_in[index] for index in edge_sorting_args
+        ]
 
         edge_weight_list_tmp = np.array(
             [self.edge_weight_list[int(edge)] for edge in edge_index_list_in]
@@ -873,7 +874,9 @@ class GLGraph(object):
         ).T
 
         self.nodes = np.delete(self.nodes, nodes_to_contract[1], 0)
-        self.node_weight_list = np.dot(self.contracted_nodes_to_nodes.T, self.node_weights_in)
+        self.node_weight_list = np.dot(
+            self.contracted_nodes_to_nodes.T, self.node_weights_in
+        )
 
         self.adj[nodes_to_contract[0], nodes_to_contract[1]] = 0.0
         self.adj[nodes_to_contract[1], nodes_to_contract[0]] = 0.0
