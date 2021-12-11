@@ -44,7 +44,7 @@ class GLGraph:
         # setting up the reduced graph
         self.edges = self.edges_in.copy()
         self.nodes = self.nodes_in.copy()
-        self.edge_weight_list = self.edge_weights_in.copy()
+        self.edge_weights = self.edge_weights_in.copy()
         self.node_weight_list = self.node_weights_in.copy()
         self.node_weight_list_old = self.node_weights_in.copy()
 
@@ -145,22 +145,22 @@ class GLGraph:
         else:
             self._node_weights_in = np.array(node_weights)
 
-    def make_adjacency(self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]):
+    def make_adjacency(self, edges_in, nodes_in=["none"], edge_weights_in=["none"]):
         if np.any([item == "none" for item in nodes_in]):
             nodelist_tmp = sorted(set(itertools.chain.from_iterable(edges_in)))
         else:
             nodelist_tmp = np.array(nodes_in)
-        if np.any([item == "none" for item in edge_weight_list_in]):
-            edge_weight_list_tmp = np.ones(len(edges_in))
+        if np.any([item == "none" for item in edge_weights_in]):
+            edge_weights_tmp = np.ones(len(edges_in))
         else:
-            edge_weight_list_tmp = np.array(edge_weight_list_in)
+            edge_weights_tmp = np.array(edge_weights_in)
 
         adj_out = np.zeros((len(nodelist_tmp), len(nodelist_tmp)))
         for index, edge in enumerate(edges_in):
             position0 = list(nodelist_tmp).index(edge[0])
             position1 = list(nodelist_tmp).index(edge[1])
-            adj_out[position0, position1] += edge_weight_list_tmp[index]
-            adj_out[position1, position0] += edge_weight_list_tmp[index]
+            adj_out[position0, position1] += edge_weights_tmp[index]
+            adj_out[position1, position0] += edge_weights_tmp[index]
         return adj_out
 
     def adjacency_to_laplacian(self, adj_in):
@@ -212,13 +212,13 @@ class GLGraph:
     def make_womega_m_tau(self, method="random", num_samples=0):
         if method == "random":
             if num_samples == 0:
-                edges_to_sample = range(len(self.edge_weight_list))
-            elif num_samples >= len(self.edge_weight_list):
-                edges_to_sample = range(len(self.edge_weight_list))
+                edges_to_sample = range(len(self.edge_weights))
+            elif num_samples >= len(self.edge_weights):
+                edges_to_sample = range(len(self.edge_weights))
             else:
                 edges_to_sample = sorted(
                     np.random.choice(
-                        len(self.edge_weight_list),
+                        len(self.edge_weights),
                         num_samples,
                         replace=False,
                     ),
@@ -261,8 +261,8 @@ class GLGraph:
 
         return [
             edges_to_sample,
-            effective_resistence_out * self.edge_weight_list[edges_to_sample],
-            edge_importance_out * self.edge_weight_list[edges_to_sample],
+            effective_resistence_out * self.edge_weights[edges_to_sample],
+            edge_importance_out * self.edge_weights[edges_to_sample],
             num_triangles_out,
         ]
 
@@ -520,27 +520,27 @@ class GLGraph:
 
     @Time()
     def delete_edge(self, edge_index_in):
-        change_tmp = -1.0 * self.edge_weight_list[edge_index_in]
+        change_tmp = -1.0 * self.edge_weights[edge_index_in]
         nodes_tmp = self.edges[edge_index_in]
         self.adj[nodes_tmp[0], nodes_tmp[1]] = 0.0
         self.adj[nodes_tmp[1], nodes_tmp[0]] = 0.0
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
         self.edges = np.delete(self.edges, edge_index_in, 0)
-        self.edge_weight_list = np.delete(self.edge_weight_list, edge_index_in, 0)
+        self.edge_weights = np.delete(self.edge_weights, edge_index_in, 0)
 
         self.updated_inv = False
         (self.update_list).append([nodes_tmp, 1.0 / change_tmp])
 
     @Time()
     def reweight_edge(self, edge_index_in, reweight_fact_in):
-        change_tmp = (reweight_fact_in - 1.0) * self.edge_weight_list[edge_index_in]
+        change_tmp = (reweight_fact_in - 1.0) * self.edge_weights[edge_index_in]
         nodes_tmp = self.edges[edge_index_in]
         self.adj[nodes_tmp[0], nodes_tmp[1]] += change_tmp
         self.adj[nodes_tmp[1], nodes_tmp[0]] += change_tmp
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
-        self.edge_weight_list[edge_index_in] += change_tmp
+        self.edge_weights[edge_index_in] += change_tmp
 
         self.updated_inv = False
         (self.update_list).append([nodes_tmp, 1.0 / change_tmp])
@@ -551,7 +551,7 @@ class GLGraph:
             int(self.edges[int(edge_index_in), 0]),
             int(self.edges[int(edge_index_in), 1]),
         ]
-        edge_weight_to_contract = self.edge_weight_list[edge_index_in]
+        edge_weight_to_contract = self.edge_weights[edge_index_in]
         layout_tmp = self.layout
         temp_element_layout_tmp = np.array(
             [
@@ -605,15 +605,15 @@ class GLGraph:
         self.adj = (np.delete(self.adj.T, nodes_to_contract[1], 0)).T
 
         edgelist_tmp = []
-        edge_weight_list_tmp = []
+        edge_weights_tmp = []
         for i in range(len(self.adj)):
             for j in range(i, len(self.adj)):
                 if self.adj[i, j] > 0:
                     edgelist_tmp.append([i, j])
-                    edge_weight_list_tmp.append(self.adj[i, j])
+                    edge_weights_tmp.append(self.adj[i, j])
 
         self.edges = np.array(edgelist_tmp)
-        self.edge_weight_list = np.array(edge_weight_list_tmp)
+        self.edge_weights = np.array(edge_weights_tmp)
 
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
@@ -813,7 +813,7 @@ class GLGraph:
     @Time()
     def delete_multiple_edges(self, edge_index_list_in):
         for edge_index in edge_index_list_in:
-            change_tmp = -1.0 * self.edge_weight_list[edge_index]
+            change_tmp = -1.0 * self.edge_weights[edge_index]
             nodes_tmp = self.edges[edge_index]
             self.adj[nodes_tmp[0], nodes_tmp[1]] = 0.0
             self.adj[nodes_tmp[1], nodes_tmp[0]] = 0.0
@@ -822,7 +822,7 @@ class GLGraph:
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
         self.edges = np.delete(self.edges, edge_index_list_in, 0)
-        self.edge_weight_list = np.delete(self.edge_weight_list, edge_index_list_in, 0)
+        self.edge_weights = np.delete(self.edge_weights, edge_index_list_in, 0)
 
         self.updated_inv = False
 
@@ -843,18 +843,18 @@ class GLGraph:
             edge_index_list_in[index] for index in edge_sorting_args
         ]
 
-        edge_weight_list_tmp = np.array(
-            [self.edge_weight_list[int(edge)] for edge in edge_index_list_in],
+        edge_weights_tmp = np.array(
+            [self.edge_weights[int(edge)] for edge in edge_index_list_in],
         )
-        sorted_edge_weight_list_tmp = [
-            edge_weight_list_tmp[index] for index in edge_sorting_args
+        sorted_edge_weights_tmp = [
+            edge_weights_tmp[index] for index in edge_sorting_args
         ]
         for index in range(len(edge_sorting_args)):
             (self.update_list).append([sorted_nodes_to_contract[index], 0.0])
             (self.rows_to_del).append(sorted_nodes_to_contract[index])
 
         for index, node_pair in enumerate(sorted_nodes_to_contract):
-            self.contract_node_pair(node_pair, sorted_edge_weight_list_tmp[index])
+            self.contract_node_pair(node_pair, sorted_edge_weights_tmp[index])
 
     @Time()
     def contract_node_pair(self, node_pair, edge_weight_in=1.0):
@@ -911,15 +911,15 @@ class GLGraph:
         self.adj = (np.delete(self.adj.T, nodes_to_contract[1], 0)).T
 
         edgelist_tmp = []
-        edge_weight_list_tmp = []
+        edge_weights_tmp = []
         for i in range(len(self.adj)):
             for j in range(i, len(self.adj)):
                 if self.adj[i, j] > 0:
                     edgelist_tmp.append([i, j])
-                    edge_weight_list_tmp.append(self.adj[i, j])
+                    edge_weights_tmp.append(self.adj[i, j])
 
         self.edges = np.array(edgelist_tmp)
-        self.edge_weight_list = np.array(edge_weight_list_tmp)
+        self.edge_weights = np.array(edge_weights_tmp)
 
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
