@@ -1,6 +1,7 @@
 import random
 import time
 import logging
+import itertools
 
 import numpy as np
 
@@ -35,17 +36,10 @@ class GLGraph:
         logging.info("Making GLGraph")
         self.problem = False
         self.edges_in = np.array(edges)
-        self.nodes_in = sorted(list(set(flatten(self.edges_in))))
+        self.nodes_in = sorted(set(itertools.chain.from_iterable(edges)))
 
-        if edge_weights is None:
-            self.edge_weights_in = np.ones(len(self.edges_in))
-        else:
-            self.edge_weights_in = np.array(edge_weights)
-
-        if node_weights is None:
-            self.node_weights_in = np.ones(len(self.nodes_in))
-        else:
-            self.node_weights_in = np.array(node_weights)
+        self.edge_weights_in = edge_weights
+        self.node_weights_in = node_weights
 
         # setting up the reduced graph
         self.edges = np.copy(self.edges_in)
@@ -130,9 +124,30 @@ class GLGraph:
         self.update_list = []
         self.rows_to_del = []
 
+    @property
+    def edge_weights_in(self):
+        return self._edge_weights_in
+
+    @edge_weights_in.setter
+    def edge_weights_in(self, edge_weights):
+        if edge_weights is None:
+            self._edge_weights_in = np.ones(len(self.edges_in))
+        else:
+            self._edge_weights_in = np.array(edge_weights)
+    @property
+    def node_weights_in(self):
+        return self._node_weights_in
+
+    @node_weights_in.setter
+    def node_weights_in(self, node_weights):
+        if node_weights is None:
+            self._node_weights_in = np.ones(len(self.nodes_in))
+        else:
+            self._node_weights_in = np.array(node_weights)
+
     def make_adjacency(self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]):
         if np.any([item == "none" for item in nodes_in]):
-            nodelist_tmp = sorted(list(set(flatten(edges_in))))
+            nodelist_tmp = sorted(set(itertools.chain.from_iterable(edges_in)))
         else:
             nodelist_tmp = np.array(nodes_in)
         if np.any([item == "none" for item in edge_weight_list_in]):
