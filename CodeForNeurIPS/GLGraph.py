@@ -27,8 +27,8 @@ class GLGraph:
     def __init__(
         self,
         edges,
-        edge_weights="none",
-        node_weights="none",
+        edge_weights=None,
+        node_weights=None,
         plot_error=False,
         layout="random",
     ):
@@ -37,12 +37,12 @@ class GLGraph:
         self.edges_in = np.array(edges)
         self.nodes_in = sorted(list(set(flatten(self.edges_in))))
 
-        if len(np.shape(edge_weights)) == 0:
+        if edge_weights is None:
             self.edge_weights_in = np.ones(len(self.edges_in))
         else:
             self.edge_weights_in = np.array(edge_weights)
 
-        if len(np.shape(node_weights)) == 0:
+        if node_weights is None:
             self.node_weights_in = np.ones(len(self.nodes_in))
         else:
             self.node_weights_in = np.array(node_weights)
@@ -54,15 +54,15 @@ class GLGraph:
         self.node_weight_list = np.copy(self.node_weights_in)
         self.node_weight_list_old = np.copy(self.node_weights_in)
 
-        # making matrices
-        logging.info("making matrices")
+        # Making matrices
+        logging.info("Making matrices")
         self.adj = self.make_adjacency(
             self.edges_in,
             self.nodes_in,
             self.edge_weights_in,
         )
         self.laplacian = self.adjacency_to_laplacian(self.adj)
-        self.node_weighted_lap_in = (((self.laplacian).T) / self.node_weights_in).T
+        self.node_weighted_lap_in = ((self.laplacian).T / self.node_weights_in).T
         self.node_weighted_lap = np.copy(self.node_weighted_lap_in)
         self.j_mat_in = (
             np.outer(
@@ -75,7 +75,7 @@ class GLGraph:
         self.contracted_nodes_to_nodes = np.identity(len(self.nodes_in))
 
         # initializing layout
-        logging.info("making layout")
+        logging.info("Making layout")
         if len(np.shape(layout)) == 0:
             if layout == "random":
                 self.layout = np.array(
@@ -83,8 +83,8 @@ class GLGraph:
                 )
                 self.boundaries = np.array([[0.0, 0.0], [1.0, 1.0]])
             else:
-                # making igraph object
-                logging.info("making graph")
+                # Making igraph object
+                logging.info("Making graph")
                 import igraph as ig
 
                 self.igraph_in = ig.Graph()
@@ -106,7 +106,7 @@ class GLGraph:
             self.layout = np.array([tuple(item) for item in layout])
 
         # computing the inverse and initial eigenvectors
-        logging.info("making inverses")
+        logging.info("Making inverses")
         self.node_weighted_inv_lap_in = self.invert_laplacian(
             self.node_weighted_lap_in,
             self.j_mat,

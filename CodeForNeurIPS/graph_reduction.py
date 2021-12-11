@@ -133,8 +133,8 @@ def main(args):
         print("Initializing GLGraph")
         g = GLGraph(
             edgelist,
-            edge_weights="none",
-            node_weights="none",
+            edge_weights=None,
+            node_weights=None,
             plot_error=plot_error,
             layout="random",
         )
