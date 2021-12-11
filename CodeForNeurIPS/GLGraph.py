@@ -42,11 +42,11 @@ class GLGraph:
         self.node_weights_in = node_weights
 
         # setting up the reduced graph
-        self.edges = np.copy(self.edges_in)
-        self.nodes = np.copy(self.nodes_in)
-        self.edge_weight_list = np.copy(self.edge_weights_in)
-        self.node_weight_list = np.copy(self.node_weights_in)
-        self.node_weight_list_old = np.copy(self.node_weights_in)
+        self.edges = self.edges_in.copy()
+        self.nodes = self.nodes_in.copy()
+        self.edge_weight_list = self.edge_weights_in.copy()
+        self.node_weight_list = self.node_weights_in.copy()
+        self.node_weight_list_old = self.node_weights_in.copy()
 
         # Making matrices
         logging.info("Making matrices")
@@ -57,7 +57,7 @@ class GLGraph:
         )
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap_in = ((self.laplacian).T / self.node_weights_in).T
-        self.node_weighted_lap = np.copy(self.node_weighted_lap_in)
+        self.node_weighted_lap = self.node_weighted_lap_in.copy()
         self.j_mat_in = (
             np.outer(
                 np.ones(len(self.node_weights_in)),
@@ -65,7 +65,7 @@ class GLGraph:
             )
             / np.sum(self.node_weights_in)
         )
-        self.j_mat = np.copy(self.j_mat_in)
+        self.j_mat = self.j_mat_in.copy()
         self.contracted_nodes_to_nodes = np.identity(len(self.nodes_in))
 
         # initializing layout
@@ -105,7 +105,7 @@ class GLGraph:
             self.node_weighted_lap_in,
             self.j_mat,
         )
-        self.node_weighted_inv_lap = np.copy(self.node_weighted_inv_lap_in)
+        self.node_weighted_inv_lap = self.node_weighted_inv_lap_in.copy()
         if not plot_error:
             self.eigvals_in = np.zeros(len(self.node_weighted_lap_in))
             self.eigvecs_in = np.zeros(np.shape(self.node_weighted_lap_in))
@@ -164,7 +164,7 @@ class GLGraph:
         return adj_out
 
     def adjacency_to_laplacian(self, adj_in):
-        lap_out = np.copy(-adj_in)
+        lap_out = -adj_in.copy()
         for index in range(len(adj_in)):
             lap_out[index, index] = -np.sum(lap_out[index])
         return lap_out
@@ -581,7 +581,7 @@ class GLGraph:
             )
         self.layout = layout_tmp
 
-        # self.node_weight_list_old = np.copy(self.node_weight_list)
+        # self.node_weight_list_old = self.node_weight_list.copy()
 
         self.contracted_nodes_to_nodes[
             :,
@@ -686,7 +686,7 @@ class GLGraph:
         self.updated_inv = True
         self.update_list = []
         self.rows_to_del = []
-        self.node_weight_list_old = np.copy(self.node_weight_list)
+        self.node_weight_list_old = self.node_weight_list.copy()
 
     def get_edgelist_proposal_rm(self, num_samples_in=0):
         adjacency_tmp = self.adj
@@ -805,7 +805,7 @@ class GLGraph:
                 for edge_to_contract in edges_to_contract
             ]
 
-        # self.node_weight_list_old = np.copy(self.node_weight_list)
+        # self.node_weight_list_old = self.node_weight_list.copy()
         self.delete_multiple_edges(edges_to_del)
         if contract_switch:
             self.contract_multiple_edges(shifted_edges_to_contract)

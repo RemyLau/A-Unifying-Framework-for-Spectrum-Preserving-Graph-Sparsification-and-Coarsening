@@ -138,11 +138,12 @@ def main(args):
             plot_error=plot_error,
             layout="random",
         )
+
         edge_num_list = []  # List of edges in the reduced graphs if target is 'edges'.
         node_num_list = []  # List of nodes in the reduced graphs if target is 'nodes'.
-        eigen_align_list = (
-            []
-        )  # List of hyperbolic distance of eigenvector output if plot_error is True.
+        # List of hyperbolic distance of eigenvector output if plot_error is True.
+        eigen_align_list = []
+
         edge_num_list.append(len(g.edges))
         node_num_list.append(len(g.nodes))
 
