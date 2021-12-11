@@ -7,7 +7,23 @@ import numpy as np
 flatten = lambda l: [item for sublist in l for item in sublist]
 
 
-class GLGraph(object):
+class Time:
+    def __init__(self, level=15):
+        self.level = level
+
+    def __call__(self, func):
+        def wrapped_func(*args, **kwargs):
+            start_time = time.perf_counter()
+            result = func(*args, **kwargs)
+            elapsed = time.perf_counter() - start_time
+            logging.log(self.level, f"{func.__name__}: {elapsed}")
+            return result
+
+        return wrapped_func
+
+
+class GLGraph:
+    @Time()
     def __init__(
         self,
         edges,
@@ -17,7 +33,6 @@ class GLGraph(object):
         layout="random",
     ):
         logging.info("Making GLGraph")
-        start_time = time.perf_counter()
         self.problem = False
         self.edges_in = np.array(edges)
         self.nodes_in = sorted(list(set(flatten(self.edges_in))))
@@ -115,9 +130,6 @@ class GLGraph(object):
         self.update_list = []
         self.rows_to_del = []
 
-        end_time = time.perf_counter()
-        logging.log(15, f"__init__: {end_time - start_time}")
-
     def make_adjacency(self, edges_in, nodes_in=["none"], edge_weight_list_in=["none"]):
         if np.any([item == "none" for item in nodes_in]):
             nodelist_tmp = sorted(list(set(flatten(edges_in))))
@@ -181,8 +193,8 @@ class GLGraph(object):
             )
         return dist_list_out
 
+    @Time()
     def make_womega_m_tau(self, method="random", num_samples=0):
-        start_time = time.perf_counter()
         if method == "random":
             if num_samples == 0:
                 edges_to_sample = range(len(self.edge_weight_list))
@@ -232,8 +244,6 @@ class GLGraph(object):
                 [item for item in neighbors0 if item in neighbors1],
             )
 
-        end_time = time.perf_counter()
-        logging.log(15, f"make_womega_m_tau: {end_time - start_time}")
         return [
             edges_to_sample,
             effective_resistence_out * self.edge_weight_list[edges_to_sample],
@@ -241,6 +251,7 @@ class GLGraph(object):
             num_triangles_out,
         ]
 
+    @Time()
     def womega_m_to_betastar(
         self,
         womega_in,
@@ -251,7 +262,6 @@ class GLGraph(object):
         reduction_target="edges",
         max_reweight_factor=0,
     ):
-        start_time = time.perf_counter()
         if reduction_type == "delete" and reduction_target == "nodes":
             print("Cannot do deletion only when targeting reduction of nodes")
             return
@@ -408,10 +418,9 @@ class GLGraph(object):
                 reweight_factor_tmp,
             ]
 
-        end_time = time.perf_counter()
-        logging.log(15, f"womega_m_to_betastar: {end_time - start_time}")
         return min_betastar_tmp, act_prob_reweight_tmp
 
+    @Time()
     def womega_m_to_betastar_list(
         self,
         womega_list_in,
@@ -422,7 +431,6 @@ class GLGraph(object):
         reduction_target="edges",
         max_reweight_factor=0,
     ):
-        start_time = time.perf_counter()
         min_betastart_list_out = np.zeros(len(womega_list_in))
         act_prob_reweight_list_out = np.zeros((len(womega_list_in), 4))
         for index in range(len(womega_list_in)):
@@ -437,10 +445,9 @@ class GLGraph(object):
             )
             min_betastart_list_out[index] = min_betastar_tmp
             act_prob_reweight_list_out[index] = act_prob_reweight_tmp
-        end_time = time.perf_counter()
-        logging.log(15, f"womega_m_to_betastar_list: {end_time - start_time}")
         return min_betastart_list_out, act_prob_reweight_list_out
 
+    @Time()
     def reduce_graph_single_edge(
         self,
         num_samples=1,
@@ -449,7 +456,6 @@ class GLGraph(object):
         reduction_target="edges",
         max_reweight_factor=0,
     ):
-        start_time = time.perf_counter()
         if not self.updated_inv:
             self.update_inverse_laplacian()
         (
@@ -497,11 +503,8 @@ class GLGraph(object):
             )
             self.reweight_edge(chosen_edge_real_index, chosen_act_prob_reweight[3])
 
-        end_time = time.perf_counter()
-        logging.log(15, f"reduce_graph_single_edge: {end_time - start_time}")
-
+    @Time()
     def delete_edge(self, edge_index_in):
-        start_time = time.perf_counter()
         change_tmp = -1.0 * self.edge_weight_list[edge_index_in]
         nodes_tmp = self.edges[edge_index_in]
         self.adj[nodes_tmp[0], nodes_tmp[1]] = 0.0
@@ -513,11 +516,9 @@ class GLGraph(object):
 
         self.updated_inv = False
         (self.update_list).append([nodes_tmp, 1.0 / change_tmp])
-        end_time = time.perf_counter()
-        logging.log(15, f"delete_edge: {end_time - start_time}")
 
+    @Time()
     def reweight_edge(self, edge_index_in, reweight_fact_in):
-        start_time = time.perf_counter()
         change_tmp = (reweight_fact_in - 1.0) * self.edge_weight_list[edge_index_in]
         nodes_tmp = self.edges[edge_index_in]
         self.adj[nodes_tmp[0], nodes_tmp[1]] += change_tmp
@@ -528,11 +529,9 @@ class GLGraph(object):
 
         self.updated_inv = False
         (self.update_list).append([nodes_tmp, 1.0 / change_tmp])
-        end_time = time.perf_counter()
-        logging.log(15, f"reweight_edge: {end_time - start_time}")
 
+    @Time()
     def contract_edge(self, edge_index_in):
-        start_time = time.perf_counter()
         nodes_to_contract = [
             int(self.edges[int(edge_index_in), 0]),
             int(self.edges[int(edge_index_in), 1]),
@@ -607,8 +606,6 @@ class GLGraph(object):
         self.updated_inv = False
         (self.update_list).append([nodes_to_contract, 0.0])
         (self.rows_to_del).append(nodes_to_contract)
-        end_time = time.perf_counter()
-        logging.log(15, f"contract_edge: {end_time - start_time}")
 
     def make_incidence_row(self, num_tot_in, edge_in):
         raw_out = np.zeros(num_tot_in)
@@ -616,9 +613,8 @@ class GLGraph(object):
         raw_out[edge_in[1]] = -1
         return raw_out
 
+    @Time()
     def update_inverse_laplacian(self):
-        start_time = time.perf_counter()
-
         edges_to_change = [item[0] for item in self.update_list]
         inv_change = [item[1] for item in self.update_list]
 
@@ -676,9 +672,6 @@ class GLGraph(object):
         self.update_list = []
         self.rows_to_del = []
         self.node_weight_list_old = np.copy(self.node_weight_list)
-
-        end_time = time.perf_counter()
-        logging.log(15, f"update_inverse_laplacian: {end_time - start_time}")
 
     def get_edgelist_proposal_rm(self, num_samples_in=0):
         adjacency_tmp = self.adj
@@ -802,8 +795,8 @@ class GLGraph(object):
         if contract_switch:
             self.contract_multiple_edges(shifted_edges_to_contract)
 
+    @Time()
     def delete_multiple_edges(self, edge_index_list_in):
-        start_time = time.perf_counter()
         for edge_index in edge_index_list_in:
             change_tmp = -1.0 * self.edge_weight_list[edge_index]
             nodes_tmp = self.edges[edge_index]
@@ -817,8 +810,6 @@ class GLGraph(object):
         self.edge_weight_list = np.delete(self.edge_weight_list, edge_index_list_in, 0)
 
         self.updated_inv = False
-        end_time = time.perf_counter()
-        logging.log(15, f"delete_edge: {end_time - start_time}")
 
     def contract_multiple_edges(self, edge_index_list_in):
         # ONLY WORKS WITH EDGES THAT DON'T SHARE NODES!!!
@@ -850,8 +841,8 @@ class GLGraph(object):
         for index, node_pair in enumerate(sorted_nodes_to_contract):
             self.contract_node_pair(node_pair, sorted_edge_weight_list_tmp[index])
 
+    @Time()
     def contract_node_pair(self, node_pair, edge_weight_in=1.0):
-        start_time = time.perf_counter()
         nodes_to_contract = node_pair
         edge_weight_to_contract = edge_weight_in
         layout_tmp = self.layout
@@ -919,5 +910,3 @@ class GLGraph(object):
         self.node_weighted_lap = (((self.laplacian).T) / self.node_weight_list).T
 
         self.updated_inv = False
-        end_time = time.perf_counter()
-        logging.log(15, f"contract_node_pair: {end_time - start_time}")
