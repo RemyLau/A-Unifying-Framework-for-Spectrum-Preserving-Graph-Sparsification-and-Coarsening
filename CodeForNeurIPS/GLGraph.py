@@ -58,13 +58,10 @@ class GLGraph:
         self.laplacian = self.adjacency_to_laplacian(self.adj)
         self.node_weighted_lap_in = ((self.laplacian).T / self.node_weights_in).T
         self.node_weighted_lap = self.node_weighted_lap_in.copy()
-        self.j_mat_in = (
-            np.outer(
-                np.ones(len(self.node_weights_in)),
-                self.node_weights_in,
-            )
-            / np.sum(self.node_weights_in)
-        )
+        self.j_mat_in = np.tile(
+            self.node_weights_in,
+            (len(self.node_weights_in), 1),
+        ) / np.sum(self.node_weights_in)
         self.j_mat = self.j_mat_in.copy()
         self.contracted_nodes_to_nodes = np.identity(len(self.nodes_in))
 
