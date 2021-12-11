@@ -5,8 +5,6 @@ import itertools
 
 import numpy as np
 
-flatten = lambda l: [item for sublist in l for item in sublist]
-
 
 class Time:
     def __init__(self, level=15):
